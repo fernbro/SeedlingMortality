@@ -66,6 +66,17 @@ ggplot(prov_clim, aes(x = spp, y = tmax))+
        fill = "Species")+
   theme_light(base_size = 20)
 
+ggplot(filter(prov_clim, month(date) == 6), aes(x = spp, y = tmax))+
+  geom_boxplot(aes(fill = spp))+
+  geom_hline(yintercept = mean(filter(prov_clim, month(date) == 6)$tmax), color = "red", linetype = 2)+
+  labs(x = "Species", y = "Max Daily Temp in June (ºC): 1984 - 2024",
+       fill = "Species")+
+  theme_light(base_size = 20)
+
+
+
+
+
 ggplot(prov_clim, aes(x = tmax))+
   geom_density(aes(color = spp), alpha = 0.4)+
   geom_vline(xintercept = mean(filter(prov_clim, spp == "PIEN")$tmax), color = "red", linetype = 2)+
