@@ -31,9 +31,10 @@ pien$spp <- "PIEN"
 
 prov_clim <- rbind(pipo, pifl, psme, pien) %>% 
   mutate(doy = yday(Date),
-    year = as.numeric(substr(Date, 1, 4)))
+    year = as.numeric(substr(Date, 1, 4)),
+    month = month(Date))
 names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax",
-                      "spp", "doy", "year")
+                      "spp", "doy", "year", "month")
 # prov_clim <- prov_clim %>% 
 #   mutate(tmean = as.numeric(tmean))
 
@@ -46,16 +47,19 @@ names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax",
 prov_z_june <- prov_clim %>% 
   group_by(spp) %>% 
   filter(month == 6) %>% 
-  summarise(tmax_mean = mean(tmax), tmax_sd = sd(tmax)) %>% 
+  summarise(tmax_mean = mean(tmax), tmax_sd = sd(tmax),
+            n = n()) %>% 
   ungroup() %>% 
-  mutate(tmax_lo = tmax_mean - tmax_sd,
-         tmax_hi = tmax_mean + tmax_sd)
+  mutate(tmax_lo = tmax_mean - 2*tmax_sd,
+         tmax_hi = tmax_mean + 2*tmax_sd,
+         tmax_se = tmax_sd/sqrt(n))
 
 ggplot(prov_z_june, aes(x = spp, y = tmax_mean))+
-  geom_point(size = 4)+
-  geom_errorbar(aes(ymin = tmax_lo, ymax = tmax_hi), width = 0.2)+
+  geom_point()+
+  geom_errorbar(aes(ymin = tmax_mean - tmax_sd, ymax = tmax_mean + tmax_sd), width = 0.2)+
+  geom_errorbar(aes(ymin = tmax_mean - 2*tmax_se, ymax = tmax_mean + 2*tmax_se), width = 0.2, color = "orange")+
   geom_hline(yintercept = mean(prov_z_june$tmax_mean), color = "blue")+
-  labs(x = "Species", y = "Mean max daily temp in June (ºC) ± SD")+
+  labs(x = "Species", y = "Mean max daily temp in June (ºC) ± SD (± 2 SE)")+
   theme_light(base_size = 26)
 
 mean(prov_z_june$tmax_mean)
