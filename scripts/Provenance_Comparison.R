@@ -44,10 +44,78 @@ names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax",
 
 # let's get some z-scores
 
+ggplot(filter(prov_clim, month == 6), aes(x = spp, y = tmax))+
+  geom_boxplot()
+
+pien6 <- filter(prov_clim, month == 6 & spp == "PIEN")
+pifl6 <- filter(prov_clim, month == 6 & spp == "PIFL")
+pipo6 <- filter(prov_clim, month == 6 & spp == "PIPO")
+psme6 <- filter(prov_clim, month == 6 & spp == "PSME")
+
+loel6 <- rbind(pipo6, psme6)
+hiel6 <- rbind(pien6, pifl6)
+
+#Max:
+ggplot(filter(prov_clim, month == 6))+
+  # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
+  geom_boxplot(aes(x = spp, y = tmax, fill = spp))+
+  geom_hline(aes(yintercept = mean(loel6$tmax, na.rm = T)), color = "red")+
+  geom_hline(aes(yintercept = mean(hiel6$tmax, na.rm = T)), color = "blue")+
+  geom_hline(aes(yintercept = median(loel6$tmax, na.rm = T)), color = "red", linetype = 2)+
+  geom_hline(aes(yintercept = median(hiel6$tmax, na.rm = T)), color = "blue", linetype = 2)+
+  theme_light(base_size = 23)+
+  labs(x = "Species",
+       y = "June daily maximum temperatures (ºC), 1984 - 2024", fill = "Species")
+# send this to don & dave
+
+#Min:
+ggplot(filter(prov_clim, month == 6))+
+  # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
+  geom_boxplot(aes(x = spp, y = tmin, fill = spp))+
+  geom_hline(aes(yintercept = mean(loel6$tmin, na.rm = T)), color = "red")+
+  geom_hline(aes(yintercept = mean(hiel6$tmin, na.rm = T)), color = "blue")+
+  geom_hline(aes(yintercept = median(loel6$tmin, na.rm = T)), color = "red", linetype = 2)+
+  geom_hline(aes(yintercept = median(hiel6$tmin, na.rm = T)), color = "blue", linetype = 2)+
+  theme_light(base_size = 23)+
+  labs(x = "Species",
+    y = "June daily minimum temperatures (ºC), 1984 - 2024", fill = "Species")
+
+
+# PIPO & PSME
+mean(loel6$tmax, na.rm = T) # 25.39 (25)
+median(loel6$tmax, na.rm = T) # 25.39 (25)
+mean(loel6$tmin, na.rm = T) # 9.15 (9)
+median(loel6$tmin, na.rm = T) # 9.15 (9)
+
+# PIEN & PIFL
+mean(hiel6$tmax, na.rm = T) # 22.03 (32)
+median(hiel6$tmax, na.rm = T) # 23 (25)
+mean(hiel6$tmin, na.rm = T) # 6.79 (17)
+median(hiel6$tmin, na.rm = T) # 9.15 (9)
+
+
+
+
+
+
+june_min_mean <- prov_clim %>% 
+  filter(month == 6) %>% 
+  group_by(spp) %>% 
+  summarise(tmin_mean = mean(tmin))
+june_min_median <- prov_clim %>% 
+  filter(month == 6) %>% 
+  group_by(spp) %>% 
+  summarise(tmin_med = median(tmin))
+
+# ggplot()+
+#   geom_point(data = june_min_mean, aes(x = spp, y = tmin_mean))+
+#   geom_point(data = june_min_median, aes(x = spp, y = tmin_med))
+
+
 prov_z_june <- prov_clim %>% 
   group_by(spp) %>% 
   filter(month == 6) %>% 
-  summarise(tmax_mean = mean(tmax), tmax_sd = sd(tmax),
+  summarise(tmax_mean = mean(tmax, na.rm = T), tmax_sd = sd(tmax, na.rm = T),
             n = n()) %>% 
   ungroup() %>% 
   mutate(tmax_lo = tmax_mean - 2*tmax_sd,
@@ -64,10 +132,14 @@ ggplot(prov_z_june, aes(x = spp, y = tmax_mean))+
 
 mean(prov_z_june$tmax_mean)
 
-# TukeyHSD(aov(tmax ~ spp, data = prov_clim), conf.level = 0.95)
+TukeyHSD(aov(tmax ~ spp, data = filter(prov_clim, month == 6)), conf.level = 0.95, na.rm = T)
 
 
 ggplot(prov_clim, aes(x = doy, y = tmax))+
+  geom_point(aes(group = year, color = spp), alpha = 0.2)+
+  geom_smooth(aes(group = spp, color = spp))+
+  geom_vline(xintercept = 126)
+ggplot(prov_clim, aes(x = doy, y = vpdmax))+
   geom_point(aes(group = year, color = spp), alpha = 0.2)+
   geom_smooth(aes(group = spp, color = spp))
 
