@@ -44,13 +44,17 @@ names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax",
 
 # let's get some z-scores
 
-ggplot(filter(prov_clim, month == 6), aes(x = spp, y = tmax))+
+ggplot(filter(prov_clim), aes(x = spp, y = tmean))+
   geom_boxplot()
 
 pien6 <- filter(prov_clim, month == 6 & spp == "PIEN")
 pifl6 <- filter(prov_clim, month == 6 & spp == "PIFL")
 pipo6 <- filter(prov_clim, month == 6 & spp == "PIPO")
 psme6 <- filter(prov_clim, month == 6 & spp == "PSME")
+
+mat <- prov_clim %>% 
+  group_by(spp) %>% 
+  summarise(mat = mean(tmean, na.rm = T))
 
 loel6 <- rbind(pipo6, psme6)
 hiel6 <- rbind(pien6, pifl6)
