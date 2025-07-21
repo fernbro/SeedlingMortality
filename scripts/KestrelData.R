@@ -37,11 +37,11 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
                       kest_3L, kest_3R, kest_4L, kest_4R)
 
 
-chamber_wide <- chamber_data %>% 
-  pivot_wider(names_from = chamber,
-              values_from = temp:rh) %>% 
-  filter(!is.na(temp_4L), doy >= 197) %>% 
-  mutate(temp_diff = temp_4L - temp_1L)
+# chamber_wide <- chamber_data %>% 
+#   pivot_wider(names_from = chamber,
+#               values_from = temp:rh) %>% 
+#   filter(!is.na(temp_4L), doy >= 197) %>% 
+#   mutate(temp_diff = temp_4L - temp_1L)
 
 ggplot(chamber_wide, aes(x = datetime, y = temp_diff))+
   geom_line()+
@@ -50,14 +50,14 @@ ggplot(chamber_wide, aes(x = datetime, y = temp_diff))+
 
 
 #1L and 1R were in fahrenheit
-chamber_data <- mutate(chamber_data, 
-                       temp = case_when(
-                         chamber %in% c("1L", "1R") ~ (temp-32)*(5/9),
-                         .default = temp)) %>% 
-  mutate(doy = yday(datetime))
+# chamber_data <- mutate(chamber_data, 
+#                        temp = case_when(
+#                          chamber %in% c("1L", "1R") ~ (temp-32)*(5/9),
+#                          .default = temp)) %>% 
+#   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 195), aes(x = datetime, y = temp))+
+ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = temp))+
   geom_line(aes(color = chamber))+
   labs(x = "Date", y = "Temperature (ºC)")+
   theme_light(base_size = 26)
