@@ -61,7 +61,7 @@ ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = temp))
   geom_line(aes(color = chamber))+
   labs(x = "Date", y = "Temperature (ºC)")+
   theme_light(base_size = 26)
-ggplot(filter(chamber_data, yday(datetime) >= 191), aes(x = datetime, y = rh))+
+ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+
   geom_line(aes(color = chamber))+
   labs(x = "Date", y = "Relative humidity (%)")
 

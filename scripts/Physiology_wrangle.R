@@ -14,10 +14,11 @@ phys <- rbind(pipo_072125, psme_072125) %>%
 
 ggplot(data = phys, aes(x = spp, y = fl))+
   geom_boxplot(aes(fill = temp))+
-  geom_point(alpha = 0.4, aes(color = temp))
+  geom_point(alpha = 0.4, aes(color = temp))+
+  labs(x = "Species", y = "Fv'/Fm'")
 
 ggplot(data = phys, aes(x = spp, y = con))+
   geom_boxplot(aes(color = temp))+
   geom_point(alpha = 0.4)
 
-summary(aov(fl ~ spp + temp, phys))
+ TukeyHSD(aov(fl ~ spp*temp, phys))
