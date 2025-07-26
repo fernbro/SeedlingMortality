@@ -1,8 +1,8 @@
 library(tidyverse)
 
-pipo_072125 <- read_csv("data/Experiment/Raw/PIPO_Phys_07212025.csv") %>% 
+pipo_072125 <- read_csv("data/Experiment/Raw/PIPO_Physiology_07212025.csv") %>% 
   transmute(tree = TreeID, con = Conductance_mmol_m2s, fl = Fv_Fm_light/1000)
-psme_072125 <- read_csv("data/Experiment/Raw/PSME_Phys_07212025.csv") %>% 
+psme_072125 <- read_csv("data/Experiment/Raw/PSME_Physiology_07212025.csv") %>% 
   transmute(tree = TreeID, con = Conductance_mmol_m2s, fl = Fv_Fm_light/1000)
 
 
@@ -21,4 +21,4 @@ ggplot(data = phys, aes(x = spp, y = con))+
   geom_boxplot(aes(color = temp))+
   geom_point(alpha = 0.4)
 
- TukeyHSD(aov(fl ~ spp*temp, phys))
+TukeyHSD(aov(fl ~ spp*temp, phys))
