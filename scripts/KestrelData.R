@@ -57,7 +57,7 @@ ggplot(chamber_wide, aes(x = datetime, y = temp_diff))+
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = temp))+
+ggplot(filter(chamber_data, yday(datetime) >= 205), aes(x = datetime, y = temp))+
   geom_line(aes(color = chamber))+
   labs(x = "Date", y = "Temperature (ºC)")+
   theme_light(base_size = 26)

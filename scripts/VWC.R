@@ -16,20 +16,22 @@ vwc_2 <- rbind(vwc_pipo, vwc_psme) %>%
 delta_vwc <- full_join(vwc_init, vwc_2) %>% 
   filter(!is.na(vwc2)) %>% 
   mutate(spp = str_sub(tree, 1, 4), delta = vwc2-vwc1) %>% 
-  mutate(set = case_when(spp %in% c("PIPO", "PSME") ~ "lo",
-                         .default = "hi"),
+  mutate(set = case_when(spp %in% c("PIPO", "PSME") ~ "lo el",
+                         .default = "hi el"),
          half_init = vwc1/2) # half_init would be the (theoretical) target for
                              # starting the heatwave!
 
+
 # the "high elevation" plants dried out a bit more- probably because  
 
-ggplot(delta_vwc, aes(x = vwc1, y = vwc2, color = set))+
-  geom_point()+
+ggplot(delta_vwc, aes(x = vwc1, y = vwc2, color = spp))+
+  geom_point(aes(shape = spp))+
   geom_smooth(method = "lm", se = F)+
-  geom_abline(slope = 1, intercept = 0)
+  geom_abline(slope = 1, intercept = 0)+
+  labs(x = "Week 1 VWC (%)", y = "Week 2 VWC (%)")
 
-mean(filter(delta_vwc, set == "hi")$delta) # pien, pifl; -2.0225
-mean(filter(delta_vwc, set == "lo")$delta) # pipo, psme; -1.99
+mean(filter(delta_vwc, set == "hi el")$delta, na.rm = T) # pien, pifl; -2.0225
+mean(filter(delta_vwc, set == "lo el")$delta) # pipo, psme; -1.99
 
 summary(lm(vwc2 ~ vwc1, data = delta_vwc)) # R2 0.2567
 
