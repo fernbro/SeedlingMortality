@@ -34,7 +34,9 @@ kest_4L$chamber <- "4L"
 kest_4R$chamber <- "4R"
 
 chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
-                      kest_3L, kest_3R, kest_4L, kest_4R)
+                      kest_3L, kest_3R, kest_4L, kest_4R) %>% 
+  mutate(set = case_when(chamber %in% c("1L", "1R", "2L", "2R") ~ "low elevation",
+                         .default = "high elevation"))
 
 
 # chamber_wide <- chamber_data %>% 
@@ -43,9 +45,9 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #   filter(!is.na(temp_4L), doy >= 197) %>% 
 #   mutate(temp_diff = temp_4L - temp_1L)
 
-ggplot(chamber_wide, aes(x = datetime, y = temp_diff))+
-  geom_line()+
-  geom_smooth(method = "lm")
+# ggplot(chamber_wide, aes(x = datetime, y = temp_diff))+
+#   geom_line()+
+#   geom_smooth(method = "lm")
 
 
 
@@ -57,11 +59,19 @@ ggplot(chamber_wide, aes(x = datetime, y = temp_diff))+
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 205), aes(x = datetime, y = temp))+
+ggplot(filter(chamber_data, yday(datetime) >= 208), aes(x = datetime, y = temp))+
   geom_line(aes(color = chamber))+
-  labs(x = "Date", y = "Temperature (ºC)")+
+  geom_point(aes(shape = set))+
+  labs(x = "Date", y = "Temperature (ºC)",
+       color = "Sensor", shape = "Species group")+
   theme_light(base_size = 26)
-ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+
+# ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+
+#   geom_line(aes(color = chamber))+
+#   labs(x = "Date", y = "Relative humidity (%)")
+ggplot(filter(chamber_data, yday(datetime) >= 208), aes(x = datetime, y = rh))+
   geom_line(aes(color = chamber))+
-  labs(x = "Date", y = "Relative humidity (%)")
+  geom_point(aes(shape = set))+
+  labs(x = "Date", y = "Relative humidity (%)",
+       color = "Sensor", shape = "Species group")+
+  theme_light(base_size = 26)
 
