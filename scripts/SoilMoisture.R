@@ -31,4 +31,4 @@ ggplot(vwc, aes(x = yday(date), y = VWC_perc, group = TreeID))+
   facet_wrap(~water)+
   theme_light(base_size = 26)+
   labs(x = "Julian day", y = "Soil moisture (%)", shape = "Species")
-ggsave("figures/VWC_v_time.jpg", last_plot(), width = 8, height = 5)
+# ggsave("figures/VWC_v_time.jpg", last_plot(), width = 8, height = 5)
