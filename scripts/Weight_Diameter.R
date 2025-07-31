@@ -30,10 +30,11 @@ ggplot(morph, aes(x = date, y = Pot_weight_g))+
   geom_smooth(method = "lm")+
   facet_wrap(~interaction(water, spp))+
   theme_light()+
-  labs(x = "Date", y = "Weight (g) ", shape = "Species")+
-  geom_text(aes(label = id))
+  labs(x = "Date", y = "Weight (g) ", shape = "Species")
 
 summary(lm(Pot_weight_g ~ date, data = filter(morph, spp == "PIPO" & water == "drought")))
+
+# write_csv()
 
 soil <- read_csv("data/Experiment/Processed/VWC.csv")
 
@@ -44,10 +45,31 @@ soil_comp <- inner_join(soil, morph, by = join_by(date, TreeID, spp, water, temp
 
 # relativize weight and VWC
 
-soil_wide <- soil_comp %>% 
+comp_stats <- soil_comp %>% 
   group_by(TreeID) %>%
-  arrange(date, .by_group = T)
+  summarise(max_weight = max(Pot_weight_g),
+            max_vwc = max(VWC_perc))
 
+
+soil_comp2 <- soil_comp %>% 
+  full_join(comp_stats) %>% 
+  mutate(weight_frac = Pot_weight_g/max_weight,
+         vwc_frac = VWC_perc/max_vwc)
+  
+cor.test(soil_comp2$weight_frac, soil_comp2$vwc_frac)
+  
+  # arrange(date, .by_group = T)
+
+ggplot(soil_comp2, aes(x = weight_frac, y = vwc_frac))+
+  geom_point(aes(color = spp))+
+  geom_path(aes(group = TreeID), lineend = "square")+
+  geom_smooth(method = "lm")+
+  facet_wrap(~interaction(temp, el_group))
+
+ggplot(filter(soil_comp2, date == "2025-07-30"), aes(x = temp, y = vwc_frac, fill = spp))+
+  geom_boxplot()
+ggplot(filter(soil_comp2, date == "2025-07-30"), aes(x = temp, y = weight_frac, fill = spp))+
+  geom_boxplot()
 
 
 ##################
@@ -56,7 +78,7 @@ cor.test(soil_comp$VWC_perc, soil_comp$Pot_weight_g)
 
 ggplot(soil_comp, aes(x = Pot_weight_g, y = VWC_perc))+
   geom_point(aes(color = spp))+
-  geom_path(aes(group = TreeID), lineend = "square")+
+ # geom_path(aes(group = TreeID), lineend = "square")+
   geom_smooth(method = "lm")+
   facet_wrap(~interaction(temp, el_group))
 
