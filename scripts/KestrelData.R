@@ -24,19 +24,29 @@ names(kdat) <- paste0("kest_", str_sub(kest, start = 14, end = 15))
 list2env(kdat, .GlobalEnv)
 
 #label & combine (this is messy)
-kest_1L$chamber <- "1L"
-kest_1R$chamber <- "1R"
-kest_2L$chamber <- "2L"
-kest_2R$chamber <- "2R"
-kest_3L$chamber <- "3L"
-kest_3R$chamber <- "3R"
-kest_4L$chamber <- "4L"
-kest_4R$chamber <- "4R"
+kest_1L$kest <- "1L"
+kest_1R$kest <- "1R"
+kest_2L$kest <- "2L"
+kest_2R$kest <- "2R"
+kest_3L$kest <- "3L"
+kest_3R$kest <- "3R"
+kest_4L$kest <- "4L"
+kest_4R$kest <- "4R"
+
+kest_1L$chamber <- 1
+kest_1R$chamber <- 1
+kest_2L$chamber <- 2
+kest_2R$chamber <- 2
+kest_3L$chamber <- 3
+kest_3R$chamber <- 3
+kest_4L$chamber <- 4
+kest_4R$chamber <- 4
 
 chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
                       kest_3L, kest_3R, kest_4L, kest_4R) %>% 
-  mutate(set = case_when(chamber %in% c("1L", "1R", "2L", "2R") ~ "low elevation",
-                         .default = "high elevation"))
+  mutate(set = case_when(kest %in% c("1L", "1R", "2L", "2R") ~ "low elevation",
+                         .default = "high elevation"),
+         chamber = factor(chamber))
 
 
 # chamber_wide <- chamber_data %>% 
@@ -59,12 +69,13 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 208), aes(x = datetime, y = temp))+
-  geom_line(aes(color = chamber))+
-  geom_point(aes(shape = set))+
+ggplot(filter(chamber_data, yday(datetime) >= 205), aes(x = datetime, y = temp))+
+  geom_line(aes(linetype = chamber, color = kest))+
+  #geom_point(aes(shape = set))+
   labs(x = "Date", y = "Temperature (ºC)",
        color = "Sensor", shape = "Species group")+
-  theme_light(base_size = 26)
+  theme_light(base_size = 26)+
+  facet_wrap(~set)
 # ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+
 #   geom_line(aes(color = chamber))+
 #   labs(x = "Date", y = "Relative humidity (%)")

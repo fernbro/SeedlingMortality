@@ -34,6 +34,15 @@ ggplot(morph, aes(x = date, y = Pot_weight_g))+
 
 summary(lm(Pot_weight_g ~ date, data = filter(morph, spp == "PIPO" & water == "drought")))
 
+
+morph_stats <- morph %>% 
+  group_by(TreeID) %>% 
+  summarise(max_weight = max(Pot_weight_g))
+
+morph <- morph %>% 
+  full_join(morph_stats) %>% 
+  mutate(weight_frac = Pot_weight_g/max_weight)
+
 # write_csv()
 
 soil <- read_csv("data/Experiment/Processed/VWC.csv")
@@ -60,14 +69,46 @@ cor.test(soil_comp2$weight_frac, soil_comp2$vwc_frac)
   
   # arrange(date, .by_group = T)
 
-ggplot(soil_comp2, aes(x = weight_frac, y = vwc_frac))+
+# by fraction:
+ggplot(filter(soil_comp2, el_group == "low elevation" & water == "drought"), 
+       aes(x = weight_frac, y = vwc_frac))+
   geom_point(aes(color = spp))+
-  geom_path(aes(group = TreeID), lineend = "square")+
-  geom_smooth(method = "lm")+
-  facet_wrap(~interaction(temp, el_group))
+  # geom_path(aes(group = TreeID), lineend = "square")+
+  geom_smooth(method = "lm", se = F, aes(linetype = temp))+
+  # facet_wrap(~interaction(temp, el_group))+
+  labs(x = "% of max weight", y = "% of max VWC")+
+  theme_light(base_size = 24)
+# by VWC and mass:
+ggplot(filter(soil_comp2, el_group == "low elevation" & water == "drought"), 
+       aes(x = Pot_weight_g, y = VWC_perc))+
+  geom_point(aes(color = spp))+
+  # geom_path(aes(group = TreeID), lineend = "square")+
+  geom_smooth(method = "lm", se = F, aes(linetype = temp))+
+  # facet_wrap(~interaction(temp, el_group))+
+  labs(x = "Pot weight (g)", y = "Soil moisture (%)", linetype = "chamber")+
+  theme_light(base_size = 24)
+ggsave("figures/VWC_v_weight.png", last_plot(), width = 8, height = 6)
 
-ggplot(filter(soil_comp2, date == "2025-07-30"), aes(x = temp, y = vwc_frac, fill = spp))+
-  geom_boxplot()
+ggplot(filter(soil_comp2, date == "2025-07-30" & temp == "heatwave" & water == "drought"), 
+       aes(x = water, y = vwc_frac, fill = spp))+
+  geom_point()+
+  facet_wrap(~spp)+
+  labs(x = "Chamber", y = "% of maximum VWC on 7/30/2025", title = "Soil moisture in heatwave chamber")+
+  theme_light(base_size = 26)
+ggsave("figures/VWC_frac_07302025.png", last_plot(), width = 9, height = 6)
+
+ggplot(filter(morph, date == "2025-07-30" & temp == "heatwave" & water == "drought"), 
+       aes(x = water, y = weight_frac, fill = spp))+
+  geom_boxplot(alpha = 0.4)+
+  geom_point()+
+  facet_wrap(~spp)+
+  labs(x = "Chamber", y = "% of max pot weight on 7/30/2025", title = "Soil moisture in heatwave chamber")+
+  theme_light(base_size = 24)
+ggsave("figures/Weight_frac_07302025.png", last_plot(), width = 9, height = 6)
+
+
+
+
 ggplot(filter(soil_comp2, date == "2025-07-30"), aes(x = temp, y = weight_frac, fill = spp))+
   geom_boxplot()
 

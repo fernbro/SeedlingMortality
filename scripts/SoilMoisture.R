@@ -25,9 +25,10 @@ vwc <- bind_rows(vwc_dat) %>%
 write_csv(vwc, "data/Experiment/Processed/VWC.csv")
 
 
-ggplot(vwc, aes(x = date, y = VWC_perc, group = TreeID))+
+ggplot(vwc, aes(x = yday(date), y = VWC_perc, group = TreeID))+
   geom_line(alpha = 0.4)+
   geom_point(aes(shape = spp))+
   facet_wrap(~water)+
-  theme_light()+
-  labs(x = "Date", y = "Soil moisture (%)", shape = "Species")
+  theme_light(base_size = 26)+
+  labs(x = "Julian day", y = "Soil moisture (%)", shape = "Species")
+ggsave("figures/VWC_v_time.jpg", last_plot(), width = 8, height = 5)
