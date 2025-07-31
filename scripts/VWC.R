@@ -1,7 +1,12 @@
+# This script was specifically written to look at changes in VWC from the initial
+# (pre-treatment) reading to the first experimental sampling.
+# See SoilMoisture.R for more time series analysis across the whole experiment....
+
 library(tidyverse)
 
 vwc_init <- read_csv("data/Experiment/Raw/VWC_07182025.csv")[,1:2] %>% 
-  transmute(tree = TreeID, vwc1 = VWC_perc)
+  transmute(tree = TreeID, vwc1 = VWC_perc) %>% 
+  mutate(week = 0)
 
 vwc_pipo <- read_csv("data/Experiment/Raw/PIPO_VWC_07232025.csv")
 vwc_psme <- read_csv("data/Experiment/Raw/PSME_VWC_07232025.csv")
