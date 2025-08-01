@@ -25,10 +25,10 @@ morph <- bind_rows(morph_dat) %>%
                            .default = "drought"))
 
 ggplot(morph, aes(x = date, y = Pot_weight_g))+
-  geom_line(alpha = 0.4, aes(group = TreeID))+
+  # geom_line(alpha = 0.4, aes(group = TreeID))+
   geom_point(aes(shape = spp))+
   geom_smooth(method = "lm")+
-  facet_wrap(~interaction(water, spp))+
+  facet_wrap(~interaction(water, spp), nrow = 4)+
   theme_light()+
   labs(x = "Date", y = "Weight (g) ", shape = "Species")
 
