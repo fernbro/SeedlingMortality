@@ -22,12 +22,14 @@ con <- bind_rows(con_dat) %>%
                            .default = "drought"))
 
 # determine effective 0 conductance:
-mean(c(84.4, 82, 80.1, 78.1)) # mean of values in mmol/m2s on Whatman Paper = 81.15 mmol/m2/s
+# mean(c(84.4, 82, 80.1, 78.1)) # mean of values in mmol/m2s on Whatman Paper = 81.15 mmol/m2/s
 
 
 ggplot(data = con, aes(x = date, y = con, group = interaction(spp, water)))+
   geom_point(alpha = 0.4, aes(color = water))+
+  geom_boxplot(aes(group = interaction(date, water), fill = water))+
+  # geom_line(aes(group = TreeID), alpha = 0.4)+
   geom_hline(yintercept = 81.15)+
-  geom_smooth(method = "lm", aes(color = water, fill = water))+
+  #geom_smooth(method = "lm", aes(color = water, fill = water))+
   facet_wrap(~interaction(spp), nrow = 4)
 

@@ -36,11 +36,11 @@ ggplot(fluor, aes(x = spp, y = Fv_Fm_dark, group = TreeID, shape = factor(n_obs)
 
 ggplot(fluor, aes(x = spp, y = Fv_Fm_dark))+
   # geom_line(alpha = 0.4)+
-  geom_boxplot()+
+  # geom_boxplot()+
   geom_point(alpha = 0.3)+
   geom_hline(yintercept = 0.75)+
   geom_hline(yintercept = 0.85)+
   facet_wrap(~interaction(water, temp))+
   theme_light(base_size = 26)+
   labs(x = "Species", y = "Fv/Fm")
-ggsave("figures/FvFm080425.png", last_plot(), width = 10, height = 6)
+# ggsave("figures/FvFm080425.png", last_plot(), width = 10, height = 6)
