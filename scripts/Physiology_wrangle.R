@@ -1,7 +1,27 @@
+# Old: don't use
+
+
+
+
 library(tidyverse)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#################
 pipo_072125 <- read_csv("data/Experiment/Raw/PIPO_Physiology_07212025.csv") %>% 
   transmute(tree = TreeID, con = Conductance_mmol_m2s, week = 1
             # , fl = Fv_Fm_light/1000
