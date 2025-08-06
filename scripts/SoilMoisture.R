@@ -26,10 +26,26 @@ vwc <- bind_rows(vwc_dat) %>%
 
 
 ggplot(vwc, aes(x = yday(date), y = VWC_perc))+
-  # geom_line(alpha = 0.4, aes(group = TreeID))+
-  geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
+  geom_line(alpha = 0.4, aes(group = TreeID))+
+  # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
   geom_point(aes(shape = spp))+
   facet_wrap(~water)+
   theme_light(base_size = 26)+
   labs(x = "Julian day", y = "Soil moisture (%)", shape = "Species", linetype = "Species", fill = "Species")
 # ggsave("figures/VWC_v_time.jpg", last_plot(), width = 8, height = 5)
+
+vwc_max <- vwc %>% 
+  group_by(TreeID) %>%
+  summarise(max_vwc = max(VWC_perc))
+
+vwc_comp <- full_join(vwc, vwc_max) %>% 
+  mutate(vwc_frac = VWC_perc/max_vwc)
+
+soil_avgs <- filter(vwc_comp, 
+                    water == "drought",,
+                    date == "2025-07-31") %>%  
+  # update with more recent date after this week
+  group_by(spp) %>% 
+  summarise(mean_vwc_frac = mean(vwc_frac))
+
+
