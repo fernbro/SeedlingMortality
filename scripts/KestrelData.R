@@ -17,6 +17,7 @@ kdat <- lapply(kest, read_csv, skip = 3) %>%
   lapply(filter, year >= 2025) %>%
   lapply(select, -year)
 
+
 #name the list elements using the file names:
 names(kdat) <- paste0("kest_", str_sub(kest, start = 14, end = 15))
 
@@ -69,13 +70,15 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 210), aes(x = datetime, y = temp))+
+ggplot(filter(chamber_data, yday(datetime) >= 210), aes(x = (datetime), y = rh))+
   geom_line(aes(linetype = chamber, color = kest))+
   #geom_point(aes(shape = set))+
-  labs(x = "Date", y = "Temperature (ºC)",
+  labs(x = "Date", y = "Relative humidity (%)",
        color = "Sensor", shape = "Species group")+
   theme_light(base_size = 26)+
-  facet_wrap(~set)
+  facet_wrap(~set, ncol = 1)
+
+
 # ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+
 #   geom_line(aes(color = chamber))+
 #   labs(x = "Date", y = "Relative humidity (%)")

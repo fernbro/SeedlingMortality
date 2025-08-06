@@ -26,10 +26,12 @@ con <- bind_rows(con_dat) %>%
 
 
 ggplot(data = con, aes(x = date, y = con, group = interaction(spp, water)))+
-  geom_point(alpha = 0.4, aes(color = water))+
-  geom_boxplot(aes(group = interaction(date, water), fill = water))+
-  # geom_line(aes(group = TreeID), alpha = 0.4)+
+  # geom_boxplot(aes(group = interaction(date, water), fill = water))+
+  # geom_line(aes(group = TreeID), alpha = 0.2)+
+  geom_point(alpha = 0.7, aes(color = water))+
   geom_hline(yintercept = 81.15)+
-  #geom_smooth(method = "lm", aes(color = water, fill = water))+
-  facet_wrap(~interaction(spp), nrow = 4)
+  geom_smooth(method = "lm", aes(color = water, fill = water), se = T)+
+  facet_wrap(~interaction(spp), nrow = 4)+
+  theme_light(base_size = 20)+
+  labs(x = "Date", y = "Foliar conductance (mmol/m2s)")
 

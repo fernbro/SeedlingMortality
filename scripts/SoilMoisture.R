@@ -22,13 +22,14 @@ vwc <- bind_rows(vwc_dat) %>%
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought"))
 
-write_csv(vwc, "data/Experiment/Processed/VWC.csv")
+# write_csv(vwc, "data/Experiment/Processed/VWC.csv")
 
 
-ggplot(vwc, aes(x = yday(date), y = VWC_perc, group = TreeID))+
-  geom_line(alpha = 0.4)+
+ggplot(vwc, aes(x = yday(date), y = VWC_perc))+
+  # geom_line(alpha = 0.4, aes(group = TreeID))+
+  geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
   geom_point(aes(shape = spp))+
   facet_wrap(~water)+
   theme_light(base_size = 26)+
-  labs(x = "Julian day", y = "Soil moisture (%)", shape = "Species")
+  labs(x = "Julian day", y = "Soil moisture (%)", shape = "Species", linetype = "Species", fill = "Species")
 # ggsave("figures/VWC_v_time.jpg", last_plot(), width = 8, height = 5)

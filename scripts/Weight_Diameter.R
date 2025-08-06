@@ -65,19 +65,45 @@ soil_comp2 <- soil_comp %>%
   mutate(weight_frac = Pot_weight_g/max_weight,
          vwc_frac = VWC_perc/max_vwc)
   
-cor.test(soil_comp2$weight_frac, soil_comp2$vwc_frac)
+# cor.test(soil_comp2$weight_frac, soil_comp2$vwc_frac)
   
   # arrange(date, .by_group = T)
 
 # by fraction:
-ggplot(filter(soil_comp2, water == "drought"), 
+ggplot(filter(soil_comp2, water == "drought" & temp == "heatwave"), 
        aes(x = weight_frac, y = vwc_frac))+
   geom_point(aes(color = spp))+
   # geom_path(aes(group = TreeID), lineend = "square")+
-  geom_smooth(method = "lm", se = F, aes(linetype = temp))+
+  geom_smooth(method = "lm", se = T, aes(linetype = temp, group = spp))+
   # facet_wrap(~interaction(temp, el_group))+
   labs(x = "% of max weight", y = "% of max VWC")+
   theme_light(base_size = 24)
+
+# mean(filter(soil_comp2, 
+#             water == "drought",,
+#             date >= "2025-07-30"),
+#      )
+# 
+# ggplot(filter(soil_comp2, 
+#               water == "drought",,
+#               date >= "2025-07-30"), 
+#        aes(x = spp, y = vwc_frac, color = temp))+
+#   # geom_boxplot()+
+#   geom_point()+
+#   labs(x = "Spp", y = "% of max VWC")+
+#   theme_light(base_size = 24)
+
+
+# to assess for heatwave criteria:
+soil_avgs <- filter(soil_comp2, 
+                    water == "drought",,
+                    date >= "2025-07-30") %>%  
+  # update with more recent date after this week
+  group_by(spp) %>% 
+  summarise(mean_vwc_frac = mean(vwc_frac))
+# want to see either ALL below 0.75 or ONE below 0.25
+
+
 # by VWC and mass:
 ggplot(filter(soil_comp2, water == "drought"), 
        aes(x = Pot_weight_g, y = VWC_perc))+
@@ -97,12 +123,11 @@ ggplot(filter(soil_comp2, date == "2025-07-31" & temp == "heatwave" & water == "
   theme_light(base_size = 26)
 # ggsave("figures/VWC_frac_07302025.png", last_plot(), width = 9, height = 6)
 
-ggplot(filter(morph, date == "2025-07-31" & temp == "heatwave" & water == "drought"), 
-       aes(x = water, y = weight_frac, fill = spp))+
+ggplot(filter(morph, date >= "2025-07-30" & temp == "heatwave" & water == "drought"), 
+       aes(x = spp, y = weight_frac))+
   geom_boxplot(alpha = 0.4)+
   geom_point()+
-  facet_wrap(~spp)+
-  labs(x = "Chamber", y = "% of max pot weight on 7/30/2025", title = "Soil moisture in heatwave chamber")+
+  labs(x = "Chamber", y = "% of max pot weight, week 2", title = "Soil moisture in heatwave chamber")+
   theme_light(base_size = 24)
 # ggsave("figures/Weight_frac_07302025.png", last_plot(), width = 9, height = 6)
 
