@@ -34,10 +34,10 @@ ggplot(fluor, aes(x = spp, y = Fv_Fm_dark, group = TreeID, shape = factor(n_obs)
   labs(x = "Species", y = "Fv/Fm", shape = "Number of obs")
 
 
-ggplot(fluor, aes(x = water, y = Fv_Fm_dark, shape = factor(n_obs)))+
+ggplot(fluor, aes(x = water, y = Fv_Fm_dark))+
   # geom_line(alpha = 0.4)+
-  # geom_boxplot()+
-  geom_point(size = 4)+
+  geom_boxplot()+
+  # geom_point(size = 4)+
   geom_hline(yintercept = 0.75)+
   geom_hline(yintercept = 0.85)+
   facet_wrap(~spp)+

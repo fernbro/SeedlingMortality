@@ -1,6 +1,8 @@
 library(tidyverse)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
+weeks <- read_csv("data/Experiment/Dates.csv") %>% 
+  mutate(date = as.POSIXct(date))
 
 morph_files <- list.files("data/Experiment/Raw/TheWorks", full.names = T)
 
@@ -22,17 +24,36 @@ morph <- bind_rows(morph_dat) %>%
   mutate(temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
-                           .default = "drought"))
+                           .default = "drought"),
+         date = date(date)) %>% 
+  inner_join(weeks)
 
-ggplot(morph, aes(x = date, y = Pot_weight_g))+
+ggplot(morph, aes(x = week, y = Pot_weight_g))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
-  geom_point(aes(shape = spp))+
-  geom_smooth(method = "lm")+
-  facet_wrap(~interaction(water, spp), nrow = 4)+
+  #geom_point(aes(shape = spp))+
+  geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
+  geom_smooth(method = "lm", aes(group = spp, fill = spp))+
+  # facet_wrap(~interaction(water, spp), nrow = 4)+
   theme_light()+
   labs(x = "Date", y = "Weight (g) ", shape = "Species")
 
-summary(lm(Pot_weight_g ~ date, data = filter(morph, spp == "PIEN" & water == "drought")))
+ggplot(morph, aes(x = week, y = Diam_mm))+
+  # geom_smooth(method = "lm", aes(fill = water))+
+  geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
+  facet_wrap(~interaction(water, spp), nrow = 4)+
+  theme_light()+
+  labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
+
+ggplot(morph, aes(x = week, y = Diam_mm))+
+  # geom_smooth(method = "lm", aes(fill = water))+
+  # geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
+  geom_line(aes(group = TreeID), alpha = 0.4)+
+  facet_wrap(~interaction(water, spp), nrow = 4)+
+  theme_light()+
+  labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
+
+summary(lm(Diam_mm ~ week + spp*water, data = morph))
+
 
 
 morph_stats <- morph %>% 
@@ -44,6 +65,11 @@ morph <- morph %>%
   mutate(weight_frac = Pot_weight_g/max_weight)
 
 # write_csv()
+
+
+
+
+
 
 soil <- read_csv("data/Experiment/Processed/VWC.csv")
 
@@ -70,11 +96,11 @@ soil_comp2 <- soil_comp %>%
   # arrange(date, .by_group = T)
 
 # by fraction:
-ggplot(filter(soil_comp2, water == "drought" & temp == "heatwave"), 
+ggplot(filter(soil_comp2, water == "drought"), 
        aes(x = weight_frac, y = vwc_frac))+
-  geom_point(aes(color = spp))+
+  geom_smooth(aes(color = spp), se = T, method = "lm")+
   # geom_path(aes(group = TreeID), lineend = "square")+
-  geom_smooth(method = "lm", se = T, aes(linetype = temp, group = spp))+
+  # geom_smooth(method = "lm", se = T, aes(linetype = temp, group = spp))+
   # facet_wrap(~interaction(temp, el_group))+
   labs(x = "% of max weight", y = "% of max VWC")+
   theme_light(base_size = 24)
@@ -97,7 +123,7 @@ ggplot(filter(soil_comp2, water == "drought" & temp == "heatwave"),
 # to assess for heatwave criteria:
 soil_avgs <- filter(soil_comp2, 
                     water == "drought",,
-                    date >= "2025-07-30") %>%  
+                    date >= "2025-08-01") %>%  
   # update with more recent date after this week
   group_by(spp) %>% 
   summarise(mean_vwc_frac = mean(vwc_frac))
@@ -123,7 +149,7 @@ ggplot(filter(soil_comp2, date == "2025-07-31" & temp == "heatwave" & water == "
   theme_light(base_size = 26)
 # ggsave("figures/VWC_frac_07302025.png", last_plot(), width = 9, height = 6)
 
-ggplot(filter(morph, date >= "2025-07-30" & temp == "heatwave" & water == "drought"), 
+ggplot(filter(morph, date >= "2025-08-01" & water == "drought"), 
        aes(x = spp, y = weight_frac))+
   geom_boxplot(alpha = 0.4)+
   geom_point()+
@@ -131,11 +157,6 @@ ggplot(filter(morph, date >= "2025-07-30" & temp == "heatwave" & water == "droug
   theme_light(base_size = 24)
 # ggsave("figures/Weight_frac_07302025.png", last_plot(), width = 9, height = 6)
 
-
-
-
-ggplot(filter(soil_comp2, date == "2025-07-30"), aes(x = temp, y = weight_frac, fill = spp))+
-  geom_boxplot()
 
 
 ##################

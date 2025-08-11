@@ -70,13 +70,13 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 210), aes(x = (datetime), y = rh))+
+ggplot(filter(chamber_data, yday(datetime) >= 210), aes(x = (datetime), y = temp))+
   geom_line(aes(linetype = chamber, color = kest))+
   #geom_point(aes(shape = set))+
-  labs(x = "Date", y = "Relative humidity (%)",
+  labs(x = "Date", y = "Temperature (ºC)",
        color = "Sensor", shape = "Species group")+
   theme_light(base_size = 26)+
-  facet_wrap(~set, ncol = 1)
+  facet_wrap(~set, ncol = 2)
 
 
 # ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+

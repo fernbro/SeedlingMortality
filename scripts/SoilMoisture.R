@@ -25,14 +25,36 @@ vwc <- bind_rows(vwc_dat) %>%
 # write_csv(vwc, "data/Experiment/Processed/VWC.csv")
 
 
-ggplot(vwc, aes(x = yday(date), y = VWC_perc))+
-  geom_line(alpha = 0.4, aes(group = TreeID))+
+ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
+  # geom_line(alpha = 0.4, aes(group = TreeID))+
   # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
-  geom_point(aes(shape = spp))+
+  # geom_point(aes(shape = spp))+
+  geom_boxplot(aes(group = date))+
   facet_wrap(~water)+
   theme_light(base_size = 26)+
   labs(x = "Julian day", y = "Soil moisture (%)", shape = "Species", linetype = "Species", fill = "Species")
-ggsave("figures/VWC_v_time.jpg", last_plot(), width = 8, height = 5)
+# ggsave("figures/VWC_v_time.jpg", last_plot(), width = 8, height = 5)
+
+ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
+  # geom_line(alpha = 0.4, aes(group = TreeID))+
+  # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
+  geom_point(pch = 1, alpha = 0.2)+
+  geom_boxplot(aes(group = yday(date)))+
+  facet_wrap(~spp)+
+  theme_light(base_size = 20)+
+  labs(x = "Julian day", y = "Soil moisture (%)", linetype = "Species", fill = "Species")
+#ggsave("figures/VWC_v_time_preHW.jpg", last_plot(), width = 8, height = 5)
+
+
+ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
+  # geom_line(alpha = 0.4, aes(group = TreeID))+
+  # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
+  geom_boxplot(aes(group = yday(date)))+
+  geom_point(pch = 1, alpha = 0.2)+
+  facet_wrap(~spp)+
+  theme_light(base_size = 20)+
+  labs(x = "Julian day", y = "Soil moisture (%)", linetype = "Species", fill = "Species")
+#ggsave("figures/VWC_Box_preHW.jpg", last_plot(), width = 8, height = 5)
 
 vwc_max <- vwc %>% 
   group_by(TreeID) %>%
@@ -41,9 +63,18 @@ vwc_max <- vwc %>%
 vwc_comp <- full_join(vwc, vwc_max) %>% 
   mutate(vwc_frac = VWC_perc/max_vwc)
 
+ggplot(filter(vwc_comp, water == "drought"), aes(x = yday(date), y = vwc_frac))+
+  geom_boxplot(aes(group = yday(date)))+
+  geom_point(pch = 1, alpha = 0.2)+
+  facet_wrap(~spp)+
+  theme_light(base_size = 20)+
+  labs(x = "Julian day", y = "Fraction of max soil moisture", linetype = "Species", fill = "Species")
+#ggsave("figures/VWCfrac_Box_preHW.jpg", last_plot(), width = 8, height = 5)
+
+
 soil_avgs <- filter(vwc_comp, 
                     water == "drought",,
-                    date == "2025-07-31") %>%  
+                    date >= "2025-08-06") %>%  
   # update with more recent date after this week
   group_by(spp) %>% 
   summarise(mean_vwc_frac = mean(vwc_frac))
