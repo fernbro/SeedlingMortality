@@ -70,7 +70,7 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 210), aes(x = (datetime), y = temp))+
+ggplot(filter(chamber_data, yday(datetime) >= 215), aes(x = (datetime), y = temp))+
   geom_line(aes(linetype = chamber, color = kest))+
   #geom_point(aes(shape = set))+
   labs(x = "Date", y = "Temperature (ºC)",
