@@ -24,14 +24,26 @@ fluor <- bind_rows(fl_dat) %>%
 
 # write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
-ggplot(fluor, aes(x = spp, y = Fv_Fm_dark, group = TreeID, shape = factor(n_obs)))+
+ggplot(fluor, aes(x = date, y = Fv_Fm_dark, group = spp))+
   # geom_line(alpha = 0.4)+
-  geom_point(alpha = 0.4, size = 3)+
+  # geom_point(alpha = 0.4, size = 3)+
+  geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
   geom_hline(yintercept = 0.75)+
   geom_hline(yintercept = 0.85)+
-  facet_wrap(~water)+
+  facet_wrap(~interaction(water, temp))+
   theme_light()+
-  labs(x = "Species", y = "Fv/Fm", shape = "Number of obs")
+  labs(x = "Species", y = "Fv/Fm")
+
+ggplot(fluor, aes(x = date, y = Fv_Fm_dark, group = spp))+
+  # geom_line(alpha = 0.4, aes(group = TreeID))+
+  geom_point(alpha = 0.4, size = 3)+
+  geom_smooth(aes(group = interaction(water, temp), linetype = water, color = temp), se = F)+
+  #geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
+  #geom_hline(yintercept = 0.75)+
+ # geom_hline(yintercept = 0.85)+
+  facet_wrap(~spp)+
+  theme_light()+
+  labs(x = "Species", y = "Fv/Fm")
 
 
 ggplot(fluor, aes(x = water, y = Fv_Fm_dark))+
