@@ -2,6 +2,7 @@ library(tidyverse)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 dates <- read_csv("data/Experiment/Dates.csv")
+hw_colors <- c("blue", "red")
 
 con_files <- list.files("data/Experiment/Raw/Conductance", full.names = T)
 
@@ -23,13 +24,13 @@ con <- bind_rows(con_dat) %>%
                            .default = "drought")) %>%
   inner_join(dates)
 
+write_csv(con, "data/Experiment/Processed/Conductance.csv")
+
 # determine effective 0 conductance:
 # mean(c(84.4, 82, 80.1, 78.1)) # mean of values in mmol/m2s on Whatman Paper = 81.15 mmol/m2/s
 
 
 ggplot(data = con, aes(x = date, y = con, group = interaction(spp, temp, water)))+
-  # geom_boxplot(aes(group = interaction(date, water), fill = water))+
-  # geom_line(aes(group = TreeID), alpha = 0.2)+
   geom_point(alpha = 0.7, aes(color = water))+
   geom_hline(yintercept = 81.15)+
   geom_smooth(method = "lm", aes(color = water, fill = water), se = T)+
@@ -37,13 +38,17 @@ ggplot(data = con, aes(x = date, y = con, group = interaction(spp, temp, water))
   theme_light(base_size = 20)+
   labs(x = "Date", y = "Foliar conductance (mmol/m2s)")
 
-ggplot(data = con, aes(x = week, y = log(con), group = interaction(spp, temp, water)))+
-  # geom_boxplot(aes(group = interaction(date, water), fill = water))+
-  # geom_line(aes(group = TreeID), alpha = 0.2)+
+ggplot(data = filter(con, spp %in% c("PIPO", "PSME")), aes(x = week, y = (con), group = interaction(spp, temp, water)))+
   geom_boxplot(alpha = 0.7, aes(group = interaction(date, water), fill = water))+
-  # geom_hline(yintercept = 81.15)+
-  # geom_smooth(method = "lm", aes(color = water, fill = water), se = T)+
   facet_wrap(~interaction(spp, temp), nrow = 4, scales = "free_y")+
+  theme_light(base_size = 20)+
+  labs(x = "Date", y = "Foliar conductance (mmol/m2s)")
+
+ggplot(data = filter(con, spp %in% c("PIPO", "PSME") & water == "drought"), aes(x = week, y = (con), 
+                                                           group = interaction(spp, temp, water)))+
+  geom_boxplot(alpha = 0.7, aes(group = interaction(date, temp), fill = temp))+
+  scale_fill_manual(values = hw_colors)+
+  facet_wrap(~interaction(spp, water), nrow = 4, scales = "free_y")+
   theme_light(base_size = 20)+
   labs(x = "Date", y = "Foliar conductance (mmol/m2s)")
 

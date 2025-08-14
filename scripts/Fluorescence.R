@@ -18,11 +18,11 @@ fluor <- bind_rows(fl_dat) %>%
   mutate(temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
-                           .default = "drought")) %>% 
-  group_by(Fv_Fm_dark, spp, water) %>% 
-  mutate(n_obs = n())
+                           .default = "drought"))
+  # group_by(Fv_Fm_dark, spp, water) %>% 
+  # mutate(n_obs = n())
 
-# write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
+write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
 ggplot(fluor, aes(x = date, y = Fv_Fm_dark, group = spp))+
   # geom_line(alpha = 0.4)+

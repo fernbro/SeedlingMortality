@@ -1,6 +1,7 @@
 library(tidyverse)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
+hw_colors <- c("blue", "red")
 
 vwc_files <- list.files("data/Experiment/Raw/VWC", full.names = T)
 
@@ -47,14 +48,26 @@ ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
 
 
 ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
-  geom_line(alpha = 0.4, aes(linetype = temp, group = TreeID))+
-  # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
+  geom_line(alpha = 0.4, aes(linetype = temp, color = temp, group = TreeID))+
+  # geom_smooth(method = "lm", aes(fill = temp))+
   # geom_boxplot(aes(group = yday(date)))+
   geom_point(pch = 1, alpha = 1, aes(color = temp))+
+  scale_color_manual(values = hw_colors)+
   facet_wrap(~spp)+
   theme_light(base_size = 20)+
   labs(x = "Julian day", y = "Soil moisture (%)", linetype = "Species", fill = "Species")
 #ggsave("figures/VWC_Box_preHW.jpg", last_plot(), width = 8, height = 5)
+
+ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
+  geom_line(alpha = 0.4, aes(linetype = temp, color = temp, group = TreeID))+
+  geom_smooth( aes(fill = temp))+
+  # geom_boxplot(aes(group = yday(date)))+
+  geom_point(pch = 1, alpha = 1, aes(color = temp))+
+  scale_color_manual(values = hw_colors)+
+  scale_fill_manual(values = hw_colors)+
+  facet_wrap(~interaction(spp))+
+  theme_light(base_size = 20)+
+  labs(x = "Julian day", y = "Soil moisture (%)", linetype = "Species", fill = "Species")
 
 vwc_max <- vwc %>% 
   group_by(TreeID) %>%
