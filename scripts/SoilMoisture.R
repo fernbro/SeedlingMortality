@@ -49,7 +49,7 @@ ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
 
 ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
   geom_line(alpha = 0.4, aes(linetype = temp, color = temp, group = TreeID))+
-  # geom_smooth(method = "lm", aes(fill = temp))+
+  geom_smooth(method = "lm", aes(fill = temp, group = TreeID), se = F)+
   # geom_boxplot(aes(group = yday(date)))+
   geom_point(pch = 1, alpha = 1, aes(color = temp))+
   scale_color_manual(values = hw_colors)+

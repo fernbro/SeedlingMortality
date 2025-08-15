@@ -32,14 +32,13 @@ ggplot(morph, aes(x = week, y = Pot_weight_g))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
   #geom_point(aes(shape = spp))+
   geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
-  geom_smooth(method = "lm", aes(group = spp, fill = spp))+
   # facet_wrap(~interaction(water, spp), nrow = 4)+
   theme_light()+
-  labs(x = "Date", y = "Weight (g) ", shape = "Species")
+  labs(x = "Week", y = "Weight (g) ", shape = "Species")
 
 ggplot(morph, aes(x = week, y = Diam_mm))+
-  # geom_smooth(method = "lm", aes(fill = water))+
-  geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
+  geom_boxplot(alpha = 0.3, aes(group = interaction(date, spp), fill = spp))+
+  geom_smooth(method = "lm", aes(fill = water))+
   facet_wrap(~interaction(water, spp), nrow = 4)+
   theme_light()+
   labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
@@ -141,7 +140,7 @@ ggplot(filter(soil_comp2, water == "drought"),
   theme_light(base_size = 24)
 # ggsave("figures/VWC_v_weight.png", last_plot(), width = 8, height = 6)
 
-ggplot(filter(soil_comp2, date == "2025-07-31" & temp == "heatwave" & water == "drought"), 
+ggplot(filter(soil_comp2, temp == "heatwave" & water == "drought"), 
        aes(x = water, y = vwc_frac, fill = spp))+
   geom_point()+
   facet_wrap(~spp)+
