@@ -46,11 +46,13 @@ ggplot(data = filter(con, spp %in% c("PIPO", "PSME")), aes(x = week, y = (con), 
 
 ggplot(data = filter(con, spp %in% c("PIPO", "PSME") & water == "drought"), aes(x = week, y = (con), 
                                                            group = interaction(spp, temp, water)))+
-  annotate("rect", alpha = 0.4, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 450,
+  annotate("rect", alpha = 0.15, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 450,
             fill = "red")+ 
-  geom_boxplot(alpha = 0.7, aes(group = interaction(date, temp), fill = temp))+
+  # geom_boxplot(alpha = 0.7, aes(group = interaction(date, temp), fill = temp))+
+  geom_point(pch = 1, alpha = 0.7, aes(group = interaction(date, temp), color = temp))+
   # geom_smooth(method = "lm", aes(fill = temp))+
-  scale_fill_manual(values = hw_colors)+
+  geom_line(aes(group = TreeID), alpha = 0.2)+
+  scale_color_manual(values = hw_colors)+
   facet_wrap(~interaction(spp, water), nrow = 4, scales = "free_y")+
   theme_light(base_size = 20)+
   labs(x = "Week", y = "Foliar conductance (mmol/m2s)")
