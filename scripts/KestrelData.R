@@ -24,6 +24,13 @@ names(kdat) <- paste0("kest_", str_sub(kest, start = 14, end = 15))
 #convert them to DFs in environment:
 list2env(kdat, .GlobalEnv)
 
+# work on code to label 2L, 2R as NA for a set of dates?
+# or just specify elsewhere (in analysis) that
+# btwn (inclusive of) 08-15-2025 @ 4:30 PM (16:00) and 08-18-2025 @ 1:30 PM (13:30)
+# PIPO31-60 and PSME31-60 were in ch1, so they also get K1L and K1R
+# (so starting at 2pm on 8/18, they were back in chamber 2)
+
+
 #label & combine (this is messy)
 kest_1L$kest <- "1L"
 kest_1R$kest <- "1R"
