@@ -52,7 +52,7 @@ ggplot(morph, aes(x = week, y = Diam_mm))+
   theme_light()+
   labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
 
-summary(lm(Diam_mm ~ week + spp*water, data = morph))
+summary(lm(Diam_mm ~ week + spp, data = morph))
 
 
 
