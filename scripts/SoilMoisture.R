@@ -40,7 +40,7 @@ ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
   # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
   geom_point(pch = 1, alpha = 0.2)+
-  geom_boxplot(aes(group = yday(date)))+
+  geom_boxplot(aes(group = interaction(yday(date), temp), fill = temp))+
   facet_wrap(~spp)+
   theme_light(base_size = 20)+
   labs(x = "Julian day", y = "Soil moisture (%)", linetype = "Species", fill = "Species")

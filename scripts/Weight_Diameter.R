@@ -33,7 +33,7 @@ ggplot(morph, aes(x = week, y = Pot_weight_g))+
   #geom_point(aes(shape = spp))+
   # geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
   # facet_wrap(~interaction(water, spp), nrow = 4)+
-  geom_smooth(method = "lm", aes(fill = water))+
+  # geom_smooth(method = "lm", aes(fill = water))+
   theme_light()+
   labs(x = "Week", y = "Weight (g) ", shape = "Species")
 

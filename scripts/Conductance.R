@@ -38,7 +38,7 @@ ggplot(data = con, aes(x = date, y = con, group = interaction(spp, temp, water))
   theme_light(base_size = 20)+
   labs(x = "Date", y = "Foliar conductance (mmol/m2s)")
 
-ggplot(data = filter(con, spp %in% c("PIPO", "PSME")), aes(x = week, y = (con), group = interaction(spp, temp, water)))+
+ggplot(data = filter(con), aes(x = week, y = (con), group = interaction(spp, temp, water)))+
   geom_boxplot(alpha = 0.7, aes(group = interaction(date, water), fill = water))+
   facet_wrap(~interaction(spp, temp), nrow = 4, scales = "free_y")+
   theme_light(base_size = 20)+

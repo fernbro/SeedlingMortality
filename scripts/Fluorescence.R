@@ -2,6 +2,7 @@ library(tidyverse)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 dates <- read_csv("data/Experiment/Dates.csv")
+hw_colors <- c("blue", "red")
 
 fl_files <- list.files("data/Experiment/Raw/Fluorescence", full.names = T)
 
@@ -28,21 +29,23 @@ write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
 ggplot(fluor, aes(x = factor(week), y = Fv_Fm_dark, group = spp))+
   geom_line(alpha = 0.2, aes(group = TreeID, linetype = temp))+
-  # geom_point(alpha = 0.4, size = 3)+
-  geom_point(aes(group = interaction(date, water), color = water, shape = temp), alpha = 0.8)+
-  geom_hline(yintercept = 0.75)+
+  geom_point(aes(group = interaction(date, water), color = water, shape = temp), alpha = 0.5)+
+  # geom_hline(yintercept = 0.75)+
   # geom_hline(yintercept = 0.85)+
   facet_wrap(~interaction(spp))+
+  scale_fill_manual(values = hw_colors)+
+  # geom_smooth(aes(group = interaction(water, temp), fill = temp))+
+  # ylim(c(0, 0.9))+
   theme_light()+
   labs(x = "Week", y = "Fv/Fm")
 
 ggplot(fluor, aes(x = date, y = Fv_Fm_dark, group = spp))+
-  # geom_line(alpha = 0.4, aes(group = TreeID))+
-  geom_point(alpha = 0.4, size = 3)+
+  #geom_line(alpha = 0.4, aes(group = TreeID))+
+  geom_point(alpha = 0.4, size = 3, pch = 1)+
   geom_smooth(aes(group = interaction(water, temp), linetype = water, color = temp), se = F)+
   #geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
   #geom_hline(yintercept = 0.75)+
- # geom_hline(yintercept = 0.85)+
+  #geom_hline(yintercept = 0.85)+
   facet_wrap(~spp)+
   theme_light()+
   labs(x = "Species", y = "Fv/Fm")
