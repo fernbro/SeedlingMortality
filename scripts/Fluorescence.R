@@ -36,8 +36,9 @@ ggplot(fluor, aes(x = factor(week), y = Fv_Fm_dark, group = spp))+
   scale_fill_manual(values = hw_colors)+
   # geom_smooth(aes(group = interaction(water, temp), fill = temp))+
   # ylim(c(0, 0.9))+
-  theme_light()+
-  labs(x = "Week", y = "Fv/Fm")
+  theme_light(base_size = 26)+
+  labs(x = "Week", y = "Fv/Fm", shape = "Temp", linetype = "Temp",
+       color = "Water")
 
 ggplot(fluor, aes(x = date, y = Fv_Fm_dark, group = spp))+
   #geom_line(alpha = 0.4, aes(group = TreeID))+

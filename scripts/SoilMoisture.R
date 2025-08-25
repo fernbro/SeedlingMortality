@@ -39,8 +39,9 @@ ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
 ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
   # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
-  geom_point(pch = 1, alpha = 0.2)+
+  geom_point(pch = 1, alpha = 0.2)+ 
   geom_boxplot(aes(group = interaction(yday(date), temp), fill = temp))+
+  scale_fill_manual(values = hw_colors)+
   facet_wrap(~spp)+
   theme_light(base_size = 20)+
   labs(x = "Julian day", y = "Soil moisture (%)", linetype = "Species", fill = "Species")
@@ -60,7 +61,7 @@ ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
 
 ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
   geom_line(alpha = 0.4, aes(linetype = temp, color = temp, group = TreeID))+
-  geom_smooth( aes(fill = temp))+
+  # geom_smooth( aes(fill = temp))+
   # geom_boxplot(aes(group = yday(date)))+
   geom_point(pch = 1, alpha = 1, aes(color = temp))+
   scale_color_manual(values = hw_colors)+
@@ -87,9 +88,12 @@ ggplot(filter(vwc_comp, water == "drought"), aes(x = yday(date), y = vwc_frac))+
 
 soil_avgs <- filter(vwc_comp, 
                     water == "drought",,
-                    date >= "2025-08-13") %>%  
+                    date >= "2025-08-17") %>%  
   # update with more recent date after this week
   group_by(spp) %>% 
   summarise(mean_vwc_frac = mean(vwc_frac))
+
+
+
 
 

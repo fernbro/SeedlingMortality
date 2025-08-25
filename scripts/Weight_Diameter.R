@@ -52,9 +52,16 @@ ggplot(morph, aes(x = week, y = Diam_mm))+
   theme_light()+
   labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
 
-summary(lm(Diam_mm ~ week + spp, data = morph))
+summary(lm(Diam_mm ~ week + water, data = morph))
 
 
+ggplot(morph, aes(x = week, y = Diam_mm))+
+  geom_line(aes(group = TreeID), alpha = 0.4)+
+  geom_smooth(method = "lm", aes(group = spp))+
+  # geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
+  facet_wrap(~(water), nrow = 4)+
+  theme_light()+
+  labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
 
 morph_stats <- morph %>% 
   group_by(TreeID) %>% 
