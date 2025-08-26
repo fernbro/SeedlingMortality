@@ -39,7 +39,8 @@ ggplot(data = con, aes(x = yday(date), y = con, group = interaction(spp, temp, w
   labs(x = "Julian Day", y = "Stomatal conductance (mmol/m2s)")
 
 
-ggplot(filter(con, temp == "heatwave"), aes(x = yday(date), y = con, group = interaction(spp, temp, water)))+
+ggplot(filter(con, temp == "heatwave"), aes(x = yday(date), y = con, 
+                                            group = interaction(spp, temp, water)))+
   annotate("rect", alpha = 0.5, xmin = 220, xmax = 227, ymin = 0, ymax = 500,
            fill = "orange")+
   geom_point(alpha = 0.7, aes(color = water))+
@@ -50,18 +51,16 @@ ggplot(filter(con, temp == "heatwave"), aes(x = yday(date), y = con, group = int
   theme_light(base_size = 20)+
   labs(x = "Julian Day", y = "Stomatal conductance (mmol/m2s)")
 
-ggplot(filter(con, water == "drought"), aes(x = yday(date), y = con, group = interaction(spp, temp, water)))+
+ggplot(con, aes(x = yday(date), y = con, group = interaction(spp, temp, water)))+
   annotate("rect", alpha = 0.5, xmin = 220, xmax = 227, ymin = 0, ymax = 500,
            fill = "orange")+
-  geom_point(alpha = 0.7, aes(color = temp))+
+  geom_point(alpha = 0.7, aes(color = water))+
   geom_hline(yintercept = 81.15)+
-  geom_smooth(aes(color = temp, fill = temp), se = T, alpha = 0.3,
+  geom_smooth(aes(color = water, fill = water), se = T, alpha = 0.3,
               span = 0.5)+
-  facet_wrap(~interaction(spp), nrow = 4)+
+  facet_wrap(~interaction(temp, spp), nrow = 4)+
   theme_light(base_size = 20)+
   labs(x = "Julian Day", y = "Stomatal conductance (mmol/m2s)")
-
-
 
 
 ######
