@@ -1,7 +1,8 @@
 library(tidyverse)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
-dates <- read_csv("data/Experiment/Dates.csv")
+dates <- read_csv("data/Experiment/Dates.csv") %>% 
+  mutate(date = as.POSIXct(date, tryFormats = "%m/%e/%y"))
 hw_colors <- c("blue", "red")
 
 con_files <- list.files("data/Experiment/Raw/Conductance", full.names = T)
