@@ -55,7 +55,7 @@ ggplot(filter(con, temp == "heatwave"), aes(x = yday(date), y = con,
 ggplot(con, aes(x = yday(date), y = con, group = interaction(spp, temp, water)))+
   annotate("rect", alpha = 0.5, xmin = 220, xmax = 227, ymin = 0, ymax = 500,
            fill = "orange")+
-  geom_point(alpha = 0.7, aes(color = water))+
+  # geom_point(alpha = 0.7, aes(color = water))+
   geom_hline(yintercept = 81.15)+
   geom_smooth(aes(color = water, fill = water), se = T, alpha = 0.3,
               span = 0.5)+
