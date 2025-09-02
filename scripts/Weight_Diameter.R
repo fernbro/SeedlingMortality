@@ -2,7 +2,7 @@ library(tidyverse)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 weeks <- read_csv("data/Experiment/Dates.csv") %>% 
-  mutate(date = as.POSIXct(date))
+  mutate(date = as.POSIXct(date, tryFormats = "%m/%d/%y"))
 
 morph_files <- list.files("data/Experiment/Raw/TheWorks", full.names = T)
 
@@ -33,16 +33,16 @@ ggplot(morph, aes(x = week, y = Pot_weight_g))+
   #geom_point(aes(shape = spp))+
   # geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
   # facet_wrap(~interaction(water, spp), nrow = 4)+
-  # geom_smooth(method = "lm", aes(fill = water))+
+  geom_smooth(method = "lm", aes(fill = water))+
   theme_light()+
   labs(x = "Week", y = "Weight (g) ", shape = "Species")
 
-ggplot(morph, aes(x = week, y = Diam_mm))+
-  geom_boxplot(alpha = 0.3, aes(group = interaction(date, spp), fill = spp))+
-  geom_smooth(method = "lm", aes(fill = water))+
-  facet_wrap(~interaction(water, spp), nrow = 4)+
-  theme_light()+
-  labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
+# ggplot(morph, aes(x = week, y = Diam_mm))+
+#   geom_boxplot(alpha = 0.3, aes(group = interaction(date, spp), fill = spp))+
+#   geom_smooth(method = "lm", aes(fill = water))+
+#   facet_wrap(~interaction(water, spp), nrow = 4)+
+#   theme_light()+
+#   labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
 
 ggplot(morph, aes(x = week, y = Diam_mm))+
   # geom_smooth(method = "lm", aes(fill = water))+
@@ -51,6 +51,18 @@ ggplot(morph, aes(x = week, y = Diam_mm))+
   facet_wrap(~interaction(water, spp), nrow = 4)+
   theme_light()+
   labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
+
+ggplot(filter(morph, date %in% c(as.POSIXct("2025-07-23"), as.POSIXct("2025-07-24"))), 
+       aes(x = spp, y = Diam_mm))+
+  geom_boxplot(aes(group = interaction(spp, water, temp), fill = water))+
+  facet_wrap(~temp)+
+  theme_light()
+
+ggplot(filter(morph, date %in% c(as.POSIXct("2025-07-23"), as.POSIXct("2025-07-24"))),
+       aes(x = Diam_mm))+
+  geom_density(aes(fill = spp), alpha = 0.4)+
+  facet_wrap(~temp)+
+  theme_light()
 
 summary(lm(Diam_mm ~ week + water, data = morph))
 

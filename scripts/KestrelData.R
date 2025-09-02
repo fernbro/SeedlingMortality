@@ -91,7 +91,7 @@ ggplot(filter(chamber_data, yday(datetime) >= 215), aes(x = (datetime), y = temp
 #   labs(x = "Date", y = "Relative humidity (%)")
 ggplot(filter(chamber_data, yday(datetime) >= 208), aes(x = datetime, y = rh))+
   geom_line(aes(color = chamber))+
-  geom_point(aes(shape = set))+
+  # geom_point(aes(shape = set))+
   labs(x = "Date", y = "Relative humidity (%)",
        color = "Sensor", shape = "Species group")+
   theme_light(base_size = 26)
