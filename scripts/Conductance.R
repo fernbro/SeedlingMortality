@@ -85,3 +85,22 @@ ggplot(data = filter(con, spp %in% c("PIPO", "PSME") & water == "drought"), aes(
   theme_light(base_size = 20)+
   labs(x = "Week", y = "Foliar conductance (mmol/m2s)")
 
+# avgs by spp and treatments over time
+con_avg <- con %>% 
+  group_by(spp, water, temp, week) %>% 
+  summarise(c_mean = mean(con), c_sd = sd(con))
+
+ggplot(filter(con_avg), aes(x = week, y = c_mean, color = water))+
+  annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 500,
+           fill = "orange")+
+  geom_point(size = 3)+
+  geom_errorbar(aes(ymin = c_mean - c_sd, ymax = c_mean + c_sd),
+                width = 0.1, alpha = 0.7)+
+  facet_wrap(~interaction(temp, spp), ncol = 2)+
+  theme_light(base_size = 20)+
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Week", y = "Conductance (mmol/m2s)")
+
+
+

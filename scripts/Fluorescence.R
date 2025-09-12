@@ -74,12 +74,13 @@ fl_avg <- fluor %>%
 
 ggplot(filter(fl_avg), aes(x = week, y = f_mean, color = water))+
   annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0.72, ymax = 0.83,
-           fill = "gray80")+
+           fill = "orange")+
   geom_point(size = 3)+
   geom_errorbar(aes(ymin = f_mean - f_sd, ymax = f_mean + f_sd),
                 width = 0.1, alpha = 0.7)+
   facet_wrap(~interaction(temp, spp), ncol = 2)+
-  theme_light()+
+  theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Week", y = "Fv/Fm")
+

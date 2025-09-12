@@ -77,7 +77,7 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 215), aes(x = (datetime), y = temp))+
+ggplot(filter(chamber_data, yday(datetime) >= 240), aes(x = (datetime), y = temp))+
   geom_line(aes(linetype = chamber, color = kest))+
   #geom_point(aes(shape = set))+
   labs(x = "Date", y = "Temperature (ºC)",
@@ -89,7 +89,7 @@ ggplot(filter(chamber_data, yday(datetime) >= 215), aes(x = (datetime), y = temp
 # ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+
 #   geom_line(aes(color = chamber))+
 #   labs(x = "Date", y = "Relative humidity (%)")
-ggplot(filter(chamber_data, yday(datetime) >= 208), aes(x = datetime, y = rh))+
+ggplot(filter(chamber_data, yday(datetime) >= 245), aes(x = datetime, y = rh))+
   geom_line(aes(color = chamber))+
   # geom_point(aes(shape = set))+
   labs(x = "Date", y = "Relative humidity (%)",
