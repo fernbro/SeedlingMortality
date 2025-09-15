@@ -23,7 +23,8 @@ con <- bind_rows(con_dat) %>%
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought")) %>%
-  inner_join(dates)
+  inner_join(dates) %>% 
+  filter(con > 50, con < 450)
 
 write_csv(con, "data/Experiment/Processed/Conductance.csv")
 

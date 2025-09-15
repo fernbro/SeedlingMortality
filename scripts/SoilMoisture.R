@@ -1,4 +1,5 @@
 library(tidyverse)
+library(dplyr)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 hw_colors <- c("blue", "red")
@@ -21,10 +22,23 @@ vwc <- bind_rows(vwc_dat) %>%
   mutate(temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
-                           .default = "drought"))
+                           .default = "drought")) %>% 
+  data.frame()
 
-# write_csv(vwc, "data/Experiment/Processed/VWC.csv")
+vwc_sum <- vwc %>% 
+  dplyr::group_by(spp, water, temp, date) %>% 
+  dplyr::summarise(vwc_mean = mean(VWC_perc, na.rm = T), 
+            vwc_sd = sd(VWC_perc, na.rm = T))
 
+write_csv(vwc, "data/Experiment/Processed/VWC.csv")
+
+ggplot(vwc_sum, aes(x = date, y = vwc_mean))+
+  facet_wrap(~interaction(water, spp), ncol = 2)+
+  geom_point(aes(color = temp))+
+  geom_hline(yintercept = 0)+
+  # geom_smooth(se = F, aes(group = temp))+
+  geom_line(aes(color = temp))+
+  geom_errorbar(aes(color = temp, ymin = vwc_mean - vwc_sd, ymax = vwc_mean + vwc_sd))
 
 ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
@@ -87,8 +101,7 @@ ggplot(filter(vwc_comp, water == "drought"), aes(x = yday(date), y = vwc_frac))+
 
 
 soil_avgs <- filter(vwc_comp, 
-                    water == "drought",,
-                    date >= "2025-08-17") %>%  
+                    water == "drought") %>%  
   # update with more recent date after this week
   group_by(spp) %>% 
   summarise(mean_vwc_frac = mean(vwc_frac))
