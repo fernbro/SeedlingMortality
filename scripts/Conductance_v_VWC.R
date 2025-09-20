@@ -9,12 +9,16 @@ vwc <- read_csv("data/Experiment/Processed/VWC.csv") %>%
 
 con_vwc <- inner_join(con, vwc) %>% 
   mutate(vwc = case_when(VWC_perc == 0 ~ 0.1,
-                         .default = VWC_perc))
+                         .default = VWC_perc)) # change the VWC = 0 to detection limit (0.1%)
 
 ggplot(con_vwc, aes(x = vwc, y = con))+
   geom_point(aes(color = spp, shape = water))+
-  geom_smooth(aes(fill = spp), method = "lm")
-  # geom_line(aes(y = predict(mixedmod), color = spp))
+  geom_smooth(aes(fill = spp, color = spp), method = "lm", alpha = 0.2)+
+  theme_light(base_size = 20)+
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  facet_wrap(~temp)+
+  labs(x = "Volumetric water content (%)", y = "Conductance (mmol/m2/s)")
 
 
 # model 1: fitting mixed model with random effect of species

@@ -88,8 +88,8 @@ ggplot(data = filter(con, spp %in% c("PIPO", "PSME") & water == "drought"), aes(
 
 # avgs by spp and treatments over time
 con_avg <- con %>% 
-  group_by(spp, water, temp, week) %>% 
-  summarise(c_mean = mean(con), c_sd = sd(con))
+  dplyr::group_by(spp, water, temp, week) %>% 
+  dplyr::summarise(c_mean = mean(con), c_sd = sd(con))
 
 ggplot(filter(con_avg), aes(x = week, y = c_mean, color = water))+
   annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 500,

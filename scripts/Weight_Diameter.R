@@ -64,9 +64,6 @@ ggplot(filter(morph, date %in% c(as.POSIXct("2025-07-23"), as.POSIXct("2025-07-2
   facet_wrap(~temp)+
   theme_light()
 
-summary(lm(Diam_mm ~ week + water, data = morph))
-
-
 ggplot(morph, aes(x = week, y = Diam_mm))+
   geom_line(aes(group = TreeID), alpha = 0.4)+
   geom_smooth(method = "lm", aes(group = spp))+
@@ -150,7 +147,7 @@ soil_avgs <- filter(soil_comp2,
 
 
 # by VWC and mass:
-ggplot(filter(soil_comp2, water == "drought"), 
+ggplot(filter(soil_comp2), 
        aes(x = Pot_weight_g, y = VWC_perc))+
   geom_point(aes(color = spp))+
   # geom_path(aes(group = TreeID), lineend = "square")+

@@ -1,5 +1,13 @@
 library(tidyverse)
 
+# VPD = 0.611*e^((17.27 × TA)/(237.3 + TA))×((100 - RH))/100
+
+# for temp in celsius and Rh in a percent
+calc_vpd <- function(air_temp, rh){
+  vpd <- (0.611 * exp(17.27*air_temp/(237.3 + air_temp)))*((100-rh)/100)
+  return(vpd)
+}
+
 kest <- list.files("data/Kestrel", full.names = T)
 
 renameFunction <- function(x,someNames){
@@ -54,7 +62,8 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
                       kest_3L, kest_3R, kest_4L, kest_4R) %>% 
   mutate(set = case_when(kest %in% c("1L", "1R", "2L", "2R") ~ "low elevation",
                          .default = "high elevation"),
-         chamber = factor(chamber))
+         chamber = factor(chamber)) %>% 
+  mutate(vpd = calc_vpd(temp, rh))
 
 
 # chamber_wide <- chamber_data %>% 
@@ -93,6 +102,13 @@ ggplot(filter(chamber_data, yday(datetime) >= 245), aes(x = datetime, y = rh))+
   geom_line(aes(color = chamber))+
   # geom_point(aes(shape = set))+
   labs(x = "Date", y = "Relative humidity (%)",
+       color = "Sensor", shape = "Species group")+
+  theme_light(base_size = 26)
+
+ggplot(filter(chamber_data, yday(datetime) >= 230), aes(x = datetime, y = vpd))+
+  geom_line(aes(color = kest))+
+  # geom_point(aes(shape = set))+
+  labs(x = "Date", y = "Vapor pressure deficit (kPa)",
        color = "Sensor", shape = "Species group")+
   theme_light(base_size = 26)
 
