@@ -32,13 +32,15 @@ vwc_sum <- vwc %>%
 
 write_csv(vwc, "data/Experiment/Processed/VWC.csv")
 
-ggplot(vwc_sum, aes(x = date, y = vwc_mean))+
+ggplot(vwc_sum, aes(x = yday(date), y = vwc_mean))+
   facet_wrap(~interaction(water, spp), ncol = 2)+
   geom_point(aes(color = temp))+
-  geom_hline(yintercept = 0)+
+  geom_hline(yintercept = 0, alpha = 0.3)+
   # geom_smooth(se = F, aes(group = temp))+
   geom_line(aes(color = temp))+
-  geom_errorbar(aes(color = temp, ymin = vwc_mean - vwc_sd, ymax = vwc_mean + vwc_sd))
+  geom_errorbar(aes(color = temp, ymin = vwc_mean - vwc_sd, ymax = vwc_mean + vwc_sd))+
+  theme_light()+
+  labs(x = "DOY", y = "Soil moisture (%)")
 
 ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+

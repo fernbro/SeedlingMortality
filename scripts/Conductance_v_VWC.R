@@ -22,16 +22,17 @@ ggplot(con_vwc, aes(x = vwc, y = con))+
 
 
 # model 1: fitting mixed model with random effect of species
-            mixedmod <- lmer(con ~ 1 + VWC_perc + (1 + VWC_perc | (spp)), con_vwc)
+            mixedmod <- lmer(con ~ 1 + VWC_perc + (1 + VWC_perc | (spp)), con_vwc, REML = F)
+            # did not converge w ML 
             summary(mixedmod)
             plot(mixedmod)
             
 # model 2: and a mixed model with fixed effect of spp, mixed effect of treeID
-            mod2 <- lmer(con ~ 1 + spp + VWC_perc + (1 | TreeID), con_vwc)
+            mod2 <- lmer(con ~ 1 + spp + VWC_perc + (1 | TreeID), con_vwc, REML = F)
             summary(mod2)
             plot(mod2)
             r.squaredGLMM(mixedmod);AIC(mixedmod)
-            r.squaredGLMM(mod2);AIC(mod2)
+            r.squaredGLMM(mod2);AIC(mod2) # lower AIC! better R2! residuals look ok!
             
             # better R2 (c and m), lower AIC than model 1
             

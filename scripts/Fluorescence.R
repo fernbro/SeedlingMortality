@@ -78,7 +78,7 @@ ggplot(filter(fl_avg), aes(x = week, y = f_mean, color = water))+
   geom_point(size = 3)+
   geom_errorbar(aes(ymin = f_mean - f_sd, ymax = f_mean + f_sd),
                 width = 0.1, alpha = 0.7)+
-  facet_wrap(~interaction(temp, spp), ncol = 2)+
+  facet_wrap(~interaction(temp, spp), ncol = 2, scales = "free")+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
