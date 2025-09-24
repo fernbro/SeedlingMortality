@@ -98,15 +98,17 @@ ggplot(filter(chamber_data, yday(datetime) >= 240), aes(x = (datetime), y = temp
 # ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+
 #   geom_line(aes(color = chamber))+
 #   labs(x = "Date", y = "Relative humidity (%)")
-ggplot(filter(chamber_data, yday(datetime) >= 245), aes(x = datetime, y = rh))+
-  geom_line(aes(color = chamber))+
+ggplot(filter(chamber_data, yday(datetime) >= 245,
+              chamber %in% c(1, 3)), aes(x = datetime, y = rh))+
+  geom_line(aes(color = kest))+
   # geom_point(aes(shape = set))+
   labs(x = "Date", y = "Relative humidity (%)",
        color = "Sensor", shape = "Species group")+
-  theme_light(base_size = 26)
+  theme_light(base_size = 26)+
+  facet_wrap(~chamber)
 
 ggplot(filter(chamber_data, yday(datetime) >= 230), aes(x = datetime, y = vpd))+
-  geom_line(aes(color = kest))+
+  geom_line(aes(color = chamber))+
   # geom_point(aes(shape = set))+
   labs(x = "Date", y = "Vapor pressure deficit (kPa)",
        color = "Sensor", shape = "Species group")+

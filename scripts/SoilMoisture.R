@@ -39,7 +39,7 @@ ggplot(vwc_sum, aes(x = yday(date), y = vwc_mean))+
   # geom_smooth(se = F, aes(group = temp))+
   geom_line(aes(color = temp))+
   geom_errorbar(aes(color = temp, ymin = vwc_mean - vwc_sd, ymax = vwc_mean + vwc_sd))+
-  theme_light()+
+  theme_light(base_size = 20)+
   labs(x = "DOY", y = "Soil moisture (%)")
 
 ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
