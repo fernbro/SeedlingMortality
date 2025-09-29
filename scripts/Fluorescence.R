@@ -73,7 +73,7 @@ fl_avg <- fluor %>%
   summarise(f_mean = mean(Fv_Fm_dark), f_sd = sd(Fv_Fm_dark))
 
 ggplot(filter(fl_avg), aes(x = week, y = f_mean, color = water))+
-  annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0.6, ymax = 0.85,
+  annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0.5, ymax = 0.85,
            fill = "orange")+
   geom_point(size = 3)+
   geom_errorbar(aes(ymin = f_mean - f_sd, ymax = f_mean + f_sd),

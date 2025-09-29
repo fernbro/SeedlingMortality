@@ -1,4 +1,5 @@
 library(tidyverse)
+library(hms)
 
 # VPD = 0.611*e^((17.27 × TA)/(237.3 + TA))×((100 - RH))/100
 
@@ -63,7 +64,8 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
   mutate(set = case_when(kest %in% c("1L", "1R", "2L", "2R") ~ "low elevation",
                          .default = "high elevation"),
          chamber = factor(chamber)) %>% 
-  mutate(vpd = calc_vpd(temp, rh))
+  mutate(vpd = calc_vpd(temp, rh)) %>% 
+  filter(datetime > as.POSIXct("2025-07-21"))
 
 
 # chamber_wide <- chamber_data %>% 
@@ -113,4 +115,79 @@ ggplot(filter(chamber_data, yday(datetime) >= 230), aes(x = datetime, y = vpd))+
   labs(x = "Date", y = "Vapor pressure deficit (kPa)",
        color = "Sensor", shape = "Species group")+
   theme_light(base_size = 26)
+
+### DIURNAL CURVES ###
+
+
+# datetime > as.POSIXct("2025-08-08 21:00:00") 
+# & datetime < as.POSIXct("2025-08-15 16:00:00"))
+
+no_hw <- chamber_data %>% 
+  filter(case_when(chamber %in% c(2, 4) ~ datetime < as.POSIXct("2025-08-08 21:00:00") 
+                   | datetime > as.POSIXct("2025-08-15 16:00:00"),  # only keep dates outside of the heatwave for the heatwave chambers
+                   chamber %in% c(1, 3) ~ datetime >= as.POSIXct("2025-07-21"))) # for the others, just keep all dates from the start
+
+hw <- chamber_data %>% 
+  filter(datetime > as.POSIXct("2025-08-08 21:00:00") 
+         & datetime < as.POSIXct("2025-08-15 16:00:00"),
+         chamber %in% c(2, 4))
+
+
+diurnals_noHW <- chamber_data %>% 
+  filter(case_when(chamber %in% c(2, 4) ~ datetime < as.POSIXct("2025-08-08 21:00:00") 
+                   | datetime > as.POSIXct("2025-08-15 16:00:00"),  # only keep dates outside of the heatwave for the heatwave chambers
+          chamber %in% c(1, 3) ~ datetime >= as.POSIXct("2025-07-21"))) %>% # for the others, just keep all dates from the start
+  mutate(time = as_hms(datetime)) %>% 
+  group_by(chamber, set, time) %>% 
+  summarise(temp_m = mean(temp),
+            rh_m = mean(rh),
+            vpd_m = mean(vpd),
+            temp_sd = sd(temp),
+            rh_sd = sd(rh),
+            vpd_sd = sd(vpd)
+            )
+
+diurnals_HW <- chamber_data %>% 
+  filter(datetime > as.POSIXct("2025-08-08 21:00:00") 
+         & datetime < as.POSIXct("2025-08-15 16:00:00"),
+         chamber %in% c(2, 4)) %>% 
+  mutate(time = as_hms(datetime)) %>% 
+  group_by(chamber, set, time) %>% 
+  summarise(temp_m = mean(temp),
+            rh_m = mean(rh),
+            vpd_m = mean(vpd),
+            temp_sd = sd(temp),
+            rh_sd = sd(rh),
+            vpd_sd = sd(vpd)
+  )
+
+ggplot(diurnals_noHW, aes(x = time, y = temp_m, color = chamber))+
+  geom_line(linewidth = 2)+
+  geom_ribbon(aes(ymin = temp_m - temp_sd, ymax = temp_m + temp_sd, 
+                  fill = chamber), alpha = 0.3)+
+  theme_light()
+
+ggplot(diurnals_HW, aes(x = time, y = temp_m, color = chamber))+
+  geom_line(linewidth = 2)+
+  geom_ribbon(aes(ymin = temp_m - temp_sd, ymax = temp_m + temp_sd, 
+                  fill = chamber), alpha = 0.3)+
+  theme_light()
+
+ggplot(diurnals_noHW, aes(x = time, y = rh_m, color = chamber))+
+  geom_line(linewidth = 2)+
+  geom_ribbon(aes(ymin = rh_m - rh_sd, ymax = rh_m + rh_sd, 
+                  fill = chamber), alpha = 0.3)+
+  theme_light()
+
+ggplot(diurnals_noHW, aes(x = time, y = vpd_m, color = chamber))+
+  geom_line(linewidth = 2)+
+  geom_ribbon(aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
+                  fill = chamber), alpha = 0.3)+
+  theme_light()
+
+ggplot(diurnals_HW, aes(x = time, y = vpd_m, color = chamber))+
+  geom_line(linewidth = 2)+
+  geom_ribbon(aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
+                  fill = chamber), alpha = 0.3)+
+  theme_light()
 

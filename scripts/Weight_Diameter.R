@@ -35,7 +35,7 @@ ggplot(morph, aes(x = week, y = Pot_weight_g))+
   # facet_wrap(~interaction(water, spp), nrow = 4)+
   geom_smooth(aes(fill = water, linetype = temp,
                   group = interaction(temp, water)))+
-  theme_light()+
+  theme_light(base_size = 20)+
   labs(x = "Week", y = "Weight (g) ", shape = "Species")
 
 # ggplot(morph, aes(x = week, y = Diam_mm))+

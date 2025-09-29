@@ -3,6 +3,8 @@ library(dplyr)
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 hw_colors <- c("blue", "red")
+dates <- read_csv("data/Experiment/Dates.csv") %>% 
+  mutate(date = as.POSIXct(date, tryFormats = "%m/%e/%y"))
 
 vwc_files <- list.files("data/Experiment/Raw/VWC", full.names = T)
 
@@ -28,19 +30,25 @@ vwc <- bind_rows(vwc_dat) %>%
 vwc_sum <- vwc %>% 
   dplyr::group_by(spp, water, temp, date) %>% 
   dplyr::summarise(vwc_mean = mean(VWC_perc, na.rm = T), 
-            vwc_sd = sd(VWC_perc, na.rm = T))
+            vwc_sd = sd(VWC_perc, na.rm = T)) %>% 
+  full_join(dates) %>% 
+  filter(!is.na(week), !is.na(temp))
 
 write_csv(vwc, "data/Experiment/Processed/VWC.csv")
 
-ggplot(vwc_sum, aes(x = yday(date), y = vwc_mean))+
-  facet_wrap(~interaction(water, spp), ncol = 2)+
-  geom_point(aes(color = temp))+
+ggplot(vwc_sum, aes(x = week, y = vwc_mean))+
+  annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 20,
+           fill = "orange")+
+  facet_wrap(~interaction(temp, spp), ncol = 2)+
+  geom_point(aes(color = water))+
   geom_hline(yintercept = 0, alpha = 0.3)+
-  # geom_smooth(se = F, aes(group = temp))+
-  geom_line(aes(color = temp))+
-  geom_errorbar(aes(color = temp, ymin = vwc_mean - vwc_sd, ymax = vwc_mean + vwc_sd))+
+  geom_line(aes(color = water))+
+  geom_errorbar(aes(color = water, ymin = vwc_mean - vwc_sd, ymax = vwc_mean + vwc_sd),
+                width = 0.1)+
   theme_light(base_size = 20)+
-  labs(x = "DOY", y = "Soil moisture (%)")
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Week", y = "Soil moisture (%)")
 
 ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
