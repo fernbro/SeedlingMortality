@@ -3,6 +3,7 @@ library(tidyverse)
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 weeks <- read_csv("data/Experiment/Dates.csv") %>% 
   mutate(date = as.POSIXct(date, tryFormats = "%m/%d/%y"))
+sub4phys <- read_csv("data/Experiment/Subset.csv")$TreeID
 
 morph_files <- list.files("data/Experiment/Raw/TheWorks", full.names = T)
 
@@ -38,12 +39,15 @@ ggplot(morph, aes(x = week, y = Pot_weight_g))+
   theme_light(base_size = 20)+
   labs(x = "Week", y = "Weight (g) ", shape = "Species")
 
-# ggplot(morph, aes(x = week, y = Diam_mm))+
-#   geom_boxplot(alpha = 0.3, aes(group = interaction(date, spp), fill = spp))+
-#   geom_smooth(method = "lm", aes(fill = water))+
-#   facet_wrap(~interaction(water, spp), nrow = 4)+
-#   theme_light()+
-#   labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
+morph_sub <- filter(morph, TreeID %in% sub4phys)
+
+ggplot(morph_sub, aes(x = week, y = Diam_mm))+
+  # geom_boxplot(alpha = 0.3, aes(group = interaction(date, spp), fill = spp))+
+  geom_point()+
+  geom_smooth(method = "lm", aes(group = TreeID), se = F, linewidth = 0.1)+
+  facet_wrap(~interaction(water, spp), nrow = 4)+
+  theme_light()+
+  labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
 
 ggplot(morph, aes(x = week, y = Diam_mm))+
   # geom_smooth(method = "lm", aes(fill = water))+
