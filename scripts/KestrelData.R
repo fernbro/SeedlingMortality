@@ -165,29 +165,34 @@ ggplot(diurnals_noHW, aes(x = time, y = temp_m, color = chamber))+
   geom_line(linewidth = 2)+
   geom_ribbon(aes(ymin = temp_m - temp_sd, ymax = temp_m + temp_sd, 
                   fill = chamber), alpha = 0.3)+
-  theme_light()
+  theme_light(base_size = 20)+
+  labs(x = "Time of day", y = "Temperature (ºC)")
 
 ggplot(diurnals_HW, aes(x = time, y = temp_m, color = chamber))+
   geom_line(linewidth = 2)+
   geom_ribbon(aes(ymin = temp_m - temp_sd, ymax = temp_m + temp_sd, 
                   fill = chamber), alpha = 0.3)+
-  theme_light()
+  theme_light(base_size = 20)+
+  labs(x = "Time of day", y = "Temperature (ºC)")
 
 ggplot(diurnals_noHW, aes(x = time, y = rh_m, color = chamber))+
   geom_line(linewidth = 2)+
   geom_ribbon(aes(ymin = rh_m - rh_sd, ymax = rh_m + rh_sd, 
-                  fill = chamber), alpha = 0.3)+
-  theme_light()
+                  fill = chamber), alpha = 0.1)+
+  theme_light(base_size = 20)+
+  labs(x = "Time of day", y = "Relative humidity (%)")
 
 ggplot(diurnals_noHW, aes(x = time, y = vpd_m, color = chamber))+
   geom_line(linewidth = 2)+
   geom_ribbon(aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
                   fill = chamber), alpha = 0.3)+
-  theme_light()
+  theme_light(base_size = 20)+
+  labs(x = "Time of day", y = "VPD (kPa)")
 
 ggplot(diurnals_HW, aes(x = time, y = vpd_m, color = chamber))+
   geom_line(linewidth = 2)+
   geom_ribbon(aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
                   fill = chamber), alpha = 0.3)+
-  theme_light()
+  theme_light(base_size = 20)+
+  labs(x = "Time of day", y = "VPD (kPa)")
 

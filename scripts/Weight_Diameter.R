@@ -37,7 +37,10 @@ ggplot(morph, aes(x = week, y = Pot_weight_g))+
   geom_smooth(aes(fill = water, linetype = temp,
                   group = interaction(temp, water)))+
   theme_light(base_size = 20)+
-  labs(x = "Week", y = "Weight (g) ", shape = "Species")
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Week", y = "Weight (g) ")+
+  facet_wrap(~spp)
 
 morph_sub <- filter(morph, TreeID %in% sub4phys)
 
@@ -112,7 +115,7 @@ soil_comp2 <- soil_comp %>%
   mutate(weight_frac = Pot_weight_g/max_weight,
          vwc_frac = VWC_perc/max_vwc)
   
-# cor.test(soil_comp2$weight_frac, soil_comp2$vwc_frac)
+cor.test(soil_comp2$weight_frac, soil_comp2$vwc_frac)
   
   # arrange(date, .by_group = T)
 
@@ -161,6 +164,8 @@ ggplot(filter(soil_comp2),
   labs(x = "Pot weight (g)", y = "Soil moisture (%)", linetype = "chamber")+
   theme_light(base_size = 24)
 # ggsave("figures/VWC_v_weight.png", last_plot(), width = 8, height = 6)
+
+cor.test(soil_comp2$Pot_weight_g, soil_comp2$VWC_perc)
 
 ggplot(filter(soil_comp2, temp == "heatwave" & water == "drought"), 
        aes(x = water, y = vwc_frac, fill = spp))+

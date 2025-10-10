@@ -43,16 +43,19 @@ ggplot(fluor, aes(x = factor(week), y = Fv_Fm_dark, group = spp))+
        color = "Water")
 # ggsave("figures/FvFm090225.png", width = 10, height = 8, units = "in")
 
-ggplot(fluor, aes(x = date, y = Fv_Fm_dark, group = spp))+
-  #geom_line(alpha = 0.4, aes(group = TreeID))+
-  geom_point(alpha = 0.4, size = 3, pch = 1)+
+ggplot(fluor, aes(x = week, y = Fv_Fm_dark, group = spp))+
+  geom_line(alpha = 0.4, aes(group = TreeID, linetype = water))+
+  geom_point(alpha = 0.2, size = 3, aes(shape = temp))+
   geom_smooth(aes(group = interaction(water, temp), linetype = water, color = temp), se = F)+
   #geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
   #geom_hline(yintercept = 0.75)+
   #geom_hline(yintercept = 0.85)+
+  scale_color_manual(values = hw_colors)+
   facet_wrap(~spp)+
-  theme_light()+
-  labs(x = "Species", y = "Fv/Fm")
+  theme_light(base_size = 20)+
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Week", y = "Fv/Fm")
 
 
 ggplot(fluor, aes(x = water, y = Fv_Fm_dark))+
@@ -73,8 +76,8 @@ fl_avg <- fluor %>%
   summarise(f_mean = mean(Fv_Fm_dark), f_sd = sd(Fv_Fm_dark))
 
 ggplot(filter(fl_avg), aes(x = week, y = f_mean, color = water))+
-  annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0.5, ymax = 0.85,
-           fill = "orange")+
+  # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0.5, ymax = 0.85,
+  #          fill = "orange")+
   geom_point(size = 3)+
   geom_errorbar(aes(ymin = f_mean - f_sd, ymax = f_mean + f_sd),
                 width = 0.1, alpha = 0.7)+
@@ -83,4 +86,3 @@ ggplot(filter(fl_avg), aes(x = week, y = f_mean, color = water))+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Week", y = "Fv/Fm")
-
