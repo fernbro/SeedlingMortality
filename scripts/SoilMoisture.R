@@ -99,7 +99,8 @@ vwc_max <- vwc %>%
   summarise(max_vwc = max(VWC_perc))
 
 vwc_comp <- full_join(vwc, vwc_max) %>% 
-  mutate(vwc_frac = VWC_perc/max_vwc)
+  mutate(vwc_frac = VWC_perc/max_vwc) %>% 
+  mutate(date = as.POSIXct(date))
 
 ggplot(filter(vwc_comp, water == "drought"), aes(x = yday(date), y = vwc_frac))+
   geom_boxplot(aes(group = yday(date)))+
@@ -110,7 +111,7 @@ ggplot(filter(vwc_comp, water == "drought"), aes(x = yday(date), y = vwc_frac))+
 #ggsave("figures/VWCfrac_Box_preHW.jpg", last_plot(), width = 8, height = 5)
 
 
-soil_avgs <- filter(vwc_comp, 
+soil_avgs <- filter(vwc_comp, date >= as.POSIXct("2025-10-05") &
                     water == "drought") %>%  
   # update with more recent date after this week
   group_by(spp) %>% 

@@ -51,7 +51,7 @@ ggplot(fluor, aes(x = week, y = Fv_Fm_dark, group = spp))+
   #geom_hline(yintercept = 0.75)+
   #geom_hline(yintercept = 0.85)+
   scale_color_manual(values = hw_colors)+
-  facet_wrap(~spp)+
+  facet_wrap(~spp + temp)+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+

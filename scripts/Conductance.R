@@ -78,7 +78,7 @@ ggplot(data = filter(con, spp %in% c("PIPO", "PSME") & water == "drought"), aes(
   annotate("rect", alpha = 0.15, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 450,
             fill = "red")+ 
   # geom_boxplot(alpha = 0.7, aes(group = interaction(date, temp), fill = temp))+
-  geom_point(pch = 1, alpha = 0.7, aes(group = interaction(date, temp), color = temp))+
+  geom_point(alpha = 0.7, aes(group = interaction(date, temp), color = temp))+
   # geom_smooth(method = "lm", aes(fill = temp))+
   geom_line(aes(group = TreeID), alpha = 0.2)+
   scale_color_manual(values = hw_colors)+
@@ -91,7 +91,7 @@ con_avg <- con %>%
   dplyr::group_by(spp, water, temp, week) %>% 
   dplyr::summarise(c_mean = mean(con), c_sd = sd(con))
 
-ggplot(filter(con_avg), aes(x = week, y = c_mean, color = water))+
+ggplot(filter(con_avg), aes(x = factor(week), y = c_mean, color = water))+
   annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 500,
            fill = "orange")+
   geom_point(size = 3)+
@@ -102,6 +102,19 @@ ggplot(filter(con_avg), aes(x = week, y = c_mean, color = water))+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Week", y = "Conductance (mmol/m2s)")
+
+ggplot(filter(con), aes(x = yday(date), y = con, color = water))+
+  # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 500,
+  #          fill = "orange")+
+  geom_point(size = 3, alpha = 0.5)+
+  # geom_errorbar(aes(ymin = c_mean - c_sd, ymax = c_mean + c_sd),
+  #               width = 0.1, alpha = 0.7)+
+  facet_wrap(~interaction(temp, spp), ncol = 2)+
+  geom_smooth(se = F, alpha = 0.4, aes(fill = water))+
+  theme_light(base_size = 20)+
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "DOY", y = "Conductance (mmol/m2s)")
 
 
 
