@@ -19,12 +19,12 @@ for(i in 1:length(vwc_dat)){
 vwc <- bind_rows(vwc_dat) %>% 
   mutate(date = date(as.POSIXct(textdate, tryFormats = "%m%d%Y")),
          spp = str_sub(TreeID, start = 1, end = 4),
-         id = as.numeric(str_sub(TreeID, start = 5, end = 6))) %>% 
-  select(-textdate) %>% 
-  mutate(temp = case_when(id < 31 ~ "ambient",
+         id = as.numeric(str_sub(TreeID, start = 5, end = 6)),
+         temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought")) %>% 
+  select(-textdate) %>% 
   data.frame()
 
 vwc_sum <- vwc %>% 
@@ -80,7 +80,9 @@ ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
   scale_color_manual(values = hw_colors)+
   facet_wrap(~spp)+
   theme_light(base_size = 20)+
-  labs(x = "Julian day", y = "Soil moisture (%)", linetype = "Species", fill = "Species")
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "DOY", y = "Soil moisture (%)", linetype = "Species", fill = "Species")
 #ggsave("figures/VWC_Box_preHW.jpg", last_plot(), width = 8, height = 5)
 
 ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+

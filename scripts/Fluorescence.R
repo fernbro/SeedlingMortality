@@ -51,7 +51,7 @@ ggplot(fluor, aes(x = week, y = Fv_Fm_dark, group = spp))+
   #geom_hline(yintercept = 0.75)+
   #geom_hline(yintercept = 0.85)+
   scale_color_manual(values = hw_colors)+
-  facet_wrap(~spp + temp)+
+  facet_wrap(~spp + temp, ncol = 4)+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
@@ -73,12 +73,12 @@ ggplot(fluor, aes(x = water, y = Fv_Fm_dark))+
 # averages for each spp and treatment over time:
 fl_avg <- fluor %>% 
   group_by(spp, water, temp, week) %>% 
-  summarise(f_mean = mean(Fv_Fm_dark), f_sd = sd(Fv_Fm_dark))
+  summarise(f_mean = mean(Fv_Fm_dark, na.rm = T), f_sd = sd(Fv_Fm_dark, na.rm = T))
 
 ggplot(filter(fl_avg), aes(x = week, y = f_mean, color = water))+
   # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0.5, ymax = 0.85,
   #          fill = "orange")+
-  geom_point(size = 3)+
+  geom_point(size = 3, pch = 1)+
   geom_errorbar(aes(ymin = f_mean - f_sd, ymax = f_mean + f_sd),
                 width = 0.1, alpha = 0.7)+
   facet_wrap(~interaction(temp, spp), ncol = 2)+
