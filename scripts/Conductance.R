@@ -110,7 +110,7 @@ ggplot(filter(con), aes(x = yday(date), y = con, color = water))+
   # geom_errorbar(aes(ymin = c_mean - c_sd, ymax = c_mean + c_sd),
   #               width = 0.1, alpha = 0.7)+
   facet_wrap(~spp + temp, ncol = 2)+
-  geom_smooth(se = F, alpha = 0.4, aes(fill = water))+
+  geom_smooth(alpha = 0.4, aes(fill = water))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
