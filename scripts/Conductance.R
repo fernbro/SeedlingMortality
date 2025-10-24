@@ -106,7 +106,7 @@ ggplot(filter(con_avg), aes(x = factor(week), y = c_mean, color = water))+
 ggplot(filter(con), aes(x = yday(date), y = con, color = water))+
   # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 500,
   #          fill = "orange")+
-  geom_point(size = 3, alpha = 0.5)+
+  geom_point(size = 2, alpha = 0.5)+
   # geom_errorbar(aes(ymin = c_mean - c_sd, ymax = c_mean + c_sd),
   #               width = 0.1, alpha = 0.7)+
   facet_wrap(~spp + temp, ncol = 2)+

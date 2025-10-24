@@ -29,9 +29,10 @@ fluor <- bind_rows(fl_dat) %>%
 write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
 
-ggplot(fluor, aes(x = factor(week), y = Fv_Fm_dark, group = spp))+
-  geom_line(alpha = 0.2, aes(group = TreeID, linetype = temp))+
-  geom_point(aes(group = interaction(date, water), color = water, shape = temp), alpha = 0.5)+
+ggplot(fluor, aes(x = yday(date), y = Fv_Fm_dark, group = spp))+
+  geom_line(alpha = 0.4, aes(group = TreeID, linetype = temp))+
+  geom_point(aes(group = interaction(date, water), color = water, shape = temp), 
+             size = 2, alpha = 0.8)+
   # geom_hline(yintercept = 0.75)+
   # geom_hline(yintercept = 0.85)+
   facet_wrap(~interaction(spp))+
@@ -39,7 +40,7 @@ ggplot(fluor, aes(x = factor(week), y = Fv_Fm_dark, group = spp))+
   # geom_smooth(method = "lm", aes(group = interaction(water, temp), fill = temp))+
   # ylim(c(0, 0.9))+
   theme_light(base_size = 26)+
-  labs(x = "Week", y = "Fv/Fm", shape = "Temp", linetype = "Temp",
+  labs(x = "DOY", y = "Fv/Fm", shape = "Temp", linetype = "Temp",
        color = "Water")
 # ggsave("figures/FvFm090225.png", width = 10, height = 8, units = "in")
 

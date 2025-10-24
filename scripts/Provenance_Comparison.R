@@ -35,6 +35,8 @@ prov_clim <- rbind(pipo, pifl, psme, pien) %>%
     month = month(Date))
 names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax",
                       "spp", "doy", "year", "month")
+prov_clim <- prov_clim %>% 
+  mutate(vpdmax = vpdmax/10, vpdmin = vpdmin/10)
 # prov_clim <- prov_clim %>% 
 #   mutate(tmean = as.numeric(tmean))
 
@@ -52,9 +54,9 @@ pifl6 <- filter(prov_clim, month == 6 & spp == "PIFL")
 pipo6 <- filter(prov_clim, month == 6 & spp == "PIPO")
 psme6 <- filter(prov_clim, month == 6 & spp == "PSME")
 
-mat <- prov_clim %>% 
-  group_by(spp) %>% 
-  summarise(mat = mean(tmean, na.rm = T))
+# mat <- prov_clim %>% 
+#   group_by(spp) %>% 
+#   summarise(mat = mean(tmean, na.rm = T))
 
 loel6 <- rbind(pipo6, psme6)
 hiel6 <- rbind(pien6, pifl6)
@@ -70,7 +72,24 @@ ggplot(filter(prov_clim, month == 6))+
   theme_light(base_size = 23)+
   labs(x = "Species",
        y = "June daily maximum temperatures (ºC), 1984 - 2024", fill = "Species")
+
+
+
 # send this to don & dave
+
+ggplot(filter(prov_clim, month == 6))+
+  # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
+  geom_boxplot(aes(x = spp, y = vpdmax, fill = spp))+
+  theme_light(base_size = 23)+
+  labs(x = "Species",
+       y = "June max VPD (kPa), 1984 - 2024", fill = "Species")
+
+ggplot(filter(prov_clim, month == 6))+
+  # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
+  geom_boxplot(aes(x = spp, y = vpdmin, fill = spp))+
+  theme_light(base_size = 23)+
+  labs(x = "Species",
+       y = "June min VPD (kPa), 1984 - 2024", fill = "Species")
 
 #Min:
 ggplot(filter(prov_clim, month == 6))+

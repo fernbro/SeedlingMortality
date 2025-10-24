@@ -88,10 +88,18 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data, yday(datetime) >= 240), aes(x = (datetime), y = temp))+
+ggplot(filter(chamber_data), aes(x = (datetime), y = temp))+
   geom_line(aes(linetype = chamber, color = kest))+
   #geom_point(aes(shape = set))+
   labs(x = "Date", y = "Temperature (ºC)",
+       color = "Sensor", shape = "Species group")+
+  theme_light(base_size = 26)+
+  facet_wrap(~set, ncol = 2)
+
+ggplot(filter(chamber_data), aes(x = (datetime), y = rh))+
+  geom_line(aes(linetype = chamber, color = kest))+
+  #geom_point(aes(shape = set))+
+  labs(x = "Date", y = "RH (%)",
        color = "Sensor", shape = "Species group")+
   theme_light(base_size = 26)+
   facet_wrap(~set, ncol = 2)
@@ -100,7 +108,7 @@ ggplot(filter(chamber_data, yday(datetime) >= 240), aes(x = (datetime), y = temp
 # ggplot(filter(chamber_data, yday(datetime) >= 202), aes(x = datetime, y = rh))+
 #   geom_line(aes(color = chamber))+
 #   labs(x = "Date", y = "Relative humidity (%)")
-ggplot(filter(chamber_data, yday(datetime) >= 245,
+ggplot(filter(chamber_data,
               chamber %in% c(1, 3)), aes(x = datetime, y = rh))+
   geom_line(aes(color = kest))+
   # geom_point(aes(shape = set))+
@@ -109,7 +117,7 @@ ggplot(filter(chamber_data, yday(datetime) >= 245,
   theme_light(base_size = 26)+
   facet_wrap(~chamber)
 
-ggplot(filter(chamber_data, yday(datetime) >= 230), aes(x = datetime, y = vpd))+
+ggplot(filter(chamber_data, month(date) >= 10), aes(x = datetime, y = vpd))+
   geom_line(aes(color = chamber))+
   # geom_point(aes(shape = set))+
   labs(x = "Date", y = "Vapor pressure deficit (kPa)",

@@ -29,7 +29,7 @@ morph <- bind_rows(morph_dat) %>%
          date = date(date)) %>% 
   inner_join(weeks)
 
-ggplot(morph, aes(x = week, y = Pot_weight_g))+
+ggplot(morph, aes(x = yday(date), y = Pot_weight_g))+
   geom_line(alpha = 0.4, aes(group = TreeID, color = water, linetype = temp))+
   #geom_point(aes(shape = spp))+
   # geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
@@ -39,7 +39,7 @@ ggplot(morph, aes(x = week, y = Pot_weight_g))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
-  labs(x = "Week", y = "Weight (g) ")+
+  labs(x = "DOY", y = "Weight (g) ")+
   facet_wrap(~spp)
 
 morph_sub <- filter(morph, TreeID %in% sub4phys)
