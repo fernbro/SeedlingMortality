@@ -14,6 +14,7 @@ for(i in 1:length(fl_dat)){
 }
 
 fluor <- bind_rows(fl_dat) %>% 
+  select(TreeID, Fv_Fm_dark, textdate) %>% 
   mutate(date = date(as.POSIXct(textdate, tryFormats = "%m%d%Y")),
          spp = str_sub(TreeID, start = 1, end = 4),
          id = as.numeric(str_sub(TreeID, start = 5, end = 6))) %>% 
@@ -28,6 +29,9 @@ fluor <- bind_rows(fl_dat) %>%
 
 write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
+dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1)) %>% 
+  group_by(TreeID) %>% 
+  mutate(weeks_dead = n())
 
 ggplot(fluor, aes(x = yday(date), y = Fv_Fm_dark, group = spp))+
   geom_line(alpha = 0.4, aes(group = TreeID, linetype = temp))+
