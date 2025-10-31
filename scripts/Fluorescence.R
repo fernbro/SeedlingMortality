@@ -1,4 +1,5 @@
 library(tidyverse)
+yday(as.POSIXct("2025-07-21"))
 
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 dates <- read_csv("data/Experiment/Dates.csv") %>% 
@@ -39,7 +40,7 @@ ggplot(fluor, aes(x = yday(date), y = Fv_Fm_dark, group = spp))+
              size = 2, alpha = 0.8)+
   # geom_hline(yintercept = 0.75)+
   # geom_hline(yintercept = 0.85)+
-  facet_wrap(~interaction(spp))+
+  facet_wrap(~(spp))+
   scale_fill_manual(values = hw_colors)+
   # geom_smooth(method = "lm", aes(group = interaction(water, temp), fill = temp))+
   # ylim(c(0, 0.9))+
