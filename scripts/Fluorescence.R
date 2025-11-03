@@ -1,6 +1,6 @@
 library(tidyverse)
-yday(as.POSIXct("2025-07-21"))
 
+start_exp <- yday(as.POSIXct("2025-07-21"))
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 dates <- read_csv("data/Experiment/Dates.csv") %>% 
   mutate(date = as.POSIXct(date, tryFormats = "%m/%e/%y"))
@@ -32,27 +32,31 @@ write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
 dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1)) %>% 
   group_by(TreeID) %>% 
-  mutate(weeks_dead = n())
+  mutate(weeks_dead = n()) %>% 
+  filter(weeks_dead >= 2) %>% 
+  select(TreeID) %>% 
+  arrange(TreeID) %>% 
+  unique()
+# PLUS psme22 and pipo56 (removed before 2 weeks of fl<0.1 bc of mold)
 
-ggplot(fluor, aes(x = yday(date), y = Fv_Fm_dark, group = spp))+
+ggplot(fluor, aes(x = yday(date)-start_exp, y = Fv_Fm_dark, group = spp))+
   geom_line(alpha = 0.4, aes(group = TreeID, linetype = temp))+
-  geom_point(aes(group = interaction(date, water), color = water, shape = temp), 
-             size = 2, alpha = 0.8)+
-  # geom_hline(yintercept = 0.75)+
-  # geom_hline(yintercept = 0.85)+
-  facet_wrap(~(spp))+
-  scale_fill_manual(values = hw_colors)+
-  # geom_smooth(method = "lm", aes(group = interaction(water, temp), fill = temp))+
-  # ylim(c(0, 0.9))+
+  geom_point(aes(group = interaction(date, water), fill = water, color = water,
+                 shape = temp), 
+             size = 2, alpha = 0.5)+
+  facet_wrap(~spp)+
+  # scale_fill_manual(values = hw_colors)+
+  scale_shape_manual(values=c(21,22))+
   theme_light(base_size = 26)+
-  labs(x = "DOY", y = "Fv/Fm", shape = "Temp", linetype = "Temp",
-       color = "Water")
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Day", y = "Fv/Fm", shape = "Temp", linetype = "Temp", color = "Water", fill = "Water")
 # ggsave("figures/FvFm090225.png", width = 10, height = 8, units = "in")
 
-ggplot(fluor, aes(x = week, y = Fv_Fm_dark, group = spp))+
-  geom_line(alpha = 0.4, aes(group = TreeID, linetype = water))+
-  geom_point(alpha = 0.2, size = 3, aes(shape = temp))+
-  geom_smooth(aes(group = interaction(water, temp), linetype = water, color = temp), se = F)+
+ggplot(fluor, aes(x = yday(date)-start_exp, y = Fv_Fm_dark, group = spp))+
+  # geom_line(alpha = 0.4, aes(group = TreeID, linetype = water))+
+  geom_point(alpha = 0.2, size = 3, aes(shape = water))+
+  geom_smooth(aes(group = interaction(water, temp), linetype = water, color = temp), se = T)+
   #geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
   #geom_hline(yintercept = 0.75)+
   #geom_hline(yintercept = 0.85)+
@@ -61,7 +65,7 @@ ggplot(fluor, aes(x = week, y = Fv_Fm_dark, group = spp))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
-  labs(x = "Week", y = "Fv/Fm")
+  labs(x = "Day", y = "Fv/Fm")
 
 
 ggplot(fluor, aes(x = water, y = Fv_Fm_dark))+
