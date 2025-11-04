@@ -1,5 +1,6 @@
 library(tidyverse)
 
+start_exp <- yday(as.POSIXct("2025-07-21"))
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 weeks <- read_csv("data/Experiment/Dates.csv") %>% 
   mutate(date = as.POSIXct(date, tryFormats = "%m/%d/%y"))
@@ -19,18 +20,30 @@ morph <- bind_rows(morph_dat) %>%
   mutate(date = as.POSIXct(textdate, tryFormats = "%m%d%Y"),
          spp = str_sub(TreeID, start = 1, end = 4),
          id = as.numeric(str_sub(TreeID, start = 5, end = 6)),
-         Brown_perc = as.numeric(str_sub(Perc_brown, start = 1, end = 2)),
+         Brown_perc = str_sub(Perc_brown, start = 1, end = 2),
          Diam_mm = round(Diameter_mm, 1)) %>%  # rounded diameter
   select(-textdate, -Perc_brown, -Diameter_mm) %>% 
   mutate(temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought"),
+         brown = as.numeric(case_when(Brown_perc == "10" ~ "5",
+                                      Brown_perc == "25" ~ "17.5",
+                                      Brown_perc == "50" ~ "37.5",
+                                      Brown_perc == "75" ~ "62.5",
+                                      Brown_perc == "90" ~ "82.5",
+                                      Brown_perc == ">9" ~ "95")),
          date = date(date)) %>% 
+  select(-Brown_perc) %>% 
   inner_join(weeks)
 
+morph %>% 
+  select(date, spp, TreeID, id, temp, water, brown) %>% 
+  write_csv("data/Experiment/Processed/Ocular_Color.csv")
+
 ggplot(morph, aes(x = yday(date), y = Pot_weight_g))+
-  geom_line(alpha = 0.4, aes(group = TreeID, color = water, linetype = temp))+
+  # geom_line(alpha = 0.4, aes(group = TreeID, color = water, linetype = temp))+
+  geom_point(size = 2, alpha = 0.4, aes(group = TreeID, color = water, shape = temp))+
   #geom_point(aes(shape = spp))+
   # geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
   # facet_wrap(~interaction(water, spp), nrow = 4)+
@@ -39,7 +52,8 @@ ggplot(morph, aes(x = yday(date), y = Pot_weight_g))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
-  labs(x = "DOY", y = "Weight (g) ")+
+  labs(x = "DOY", y = "Weight (g) ", color = "Water", fill = "Water", 
+       linetype = "Temperature", shape = "Temperature")+
   facet_wrap(~spp)
 
 morph_sub <- filter(morph, TreeID %in% sub4phys)

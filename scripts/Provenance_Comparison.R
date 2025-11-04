@@ -36,7 +36,8 @@ prov_clim <- rbind(pipo, pifl, psme, pien) %>%
 names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax",
                       "spp", "doy", "year", "month")
 prov_clim <- prov_clim %>% 
-  mutate(vpdmax = vpdmax/10, vpdmin = vpdmin/10)
+  mutate(vpdmax = vpdmax/10, vpdmin = vpdmin/10) %>% 
+  mutate(vpd = (vpdmax+vpdmin)/2)
 # prov_clim <- prov_clim %>% 
 #   mutate(tmean = as.numeric(tmean))
 
@@ -83,6 +84,12 @@ ggplot(filter(prov_clim, month == 6))+
   theme_light(base_size = 23)+
   labs(x = "Species",
        y = "June max VPD (kPa), 1984 - 2024", fill = "Species")
+
+ggplot(filter(prov_clim, month == 6))+
+  geom_boxplot(aes(x = spp, y = vpd, fill = spp))+
+  theme_light(base_size = 23)+
+  labs(x = "Species",
+       y = "June VPD (kPa), 1984 - 2024", fill = "Species")
 
 ggplot(filter(prov_clim, month == 6))+
   # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+

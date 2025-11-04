@@ -1,6 +1,7 @@
 library(tidyverse)
 library(dplyr)
 
+start_exp <- yday(as.POSIXct("2025-07-21"))
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 hw_colors <- c("blue", "red")
 dates <- read_csv("data/Experiment/Dates.csv") %>% 
@@ -36,7 +37,7 @@ vwc_sum <- vwc %>%
 
 write_csv(vwc, "data/Experiment/Processed/VWC.csv")
 
-ggplot(vwc_sum, aes(x = yday(date), y = vwc_mean))+
+ggplot(vwc_sum, aes(x = yday(date)-start_exp, y = vwc_mean))+
   # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 20,
   #          fill = "orange")+
   facet_wrap(~interaction(temp, spp), ncol = 2)+

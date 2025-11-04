@@ -117,7 +117,7 @@ ggplot(filter(chamber_data,
   theme_light(base_size = 26)+
   facet_wrap(~chamber)
 
-ggplot(filter(chamber_data, month(date) >= 10), aes(x = datetime, y = vpd))+
+ggplot(filter(chamber_data, month(datetime) >= 10), aes(x = datetime, y = vpd))+
   geom_line(aes(color = chamber))+
   # geom_point(aes(shape = set))+
   labs(x = "Date", y = "Vapor pressure deficit (kPa)",
@@ -200,7 +200,7 @@ ggplot(diurnals_noHW, aes(x = time, y = vpd_m, color = chamber))+
 ggplot(diurnals_HW, aes(x = time, y = vpd_m, color = chamber))+
   geom_line(linewidth = 2)+
   geom_ribbon(aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
-                  fill = chamber), alpha = 0.3)+
+                  fill = chamber), alpha = 0.1)+
   theme_light(base_size = 20)+
   labs(x = "Time of day", y = "VPD (kPa)")
 
