@@ -6,6 +6,7 @@ water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 hw_colors <- c("blue", "red")
 dates <- read_csv("data/Experiment/Dates.csv") %>% 
   mutate(date = as.POSIXct(date, tryFormats = "%m/%e/%y"))
+hw_days <- c(19,25)
 
 vwc_files <- list.files("data/Experiment/Raw/VWC", full.names = T)
 
@@ -26,10 +27,11 @@ vwc <- bind_rows(vwc_dat) %>%
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought")) %>% 
   select(-textdate) %>% 
-  data.frame()
+  data.frame() %>% 
+  mutate(day = yday(date)-202)
 
 vwc_sum <- vwc %>% 
-  dplyr::group_by(spp, water, temp, date) %>% 
+  dplyr::group_by(spp, water, temp, date, day) %>% 
   dplyr::summarise(vwc_mean = mean(VWC_perc, na.rm = T), 
             vwc_sd = sd(VWC_perc, na.rm = T)) %>% 
   full_join(dates) %>% 
@@ -37,19 +39,19 @@ vwc_sum <- vwc %>%
 
 write_csv(vwc, "data/Experiment/Processed/VWC.csv")
 
-ggplot(vwc_sum, aes(x = yday(date)-start_exp, y = vwc_mean))+
+ggplot(vwc_sum, aes(x = day, y = vwc_mean))+
   # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 20,
   #          fill = "orange")+
-  facet_wrap(~interaction(temp, spp), ncol = 2)+
+  facet_wrap(~temp+spp, ncol = 4)+
   geom_point(aes(color = water))+
   geom_hline(yintercept = 0, alpha = 0.3)+
   geom_line(aes(color = water))+
   geom_errorbar(aes(color = water, ymin = vwc_mean - vwc_sd, ymax = vwc_mean + vwc_sd),
                 width = 0.1)+
-  theme_light(base_size = 20)+
-  theme(strip.background = element_rect(color = "black", fill = "white"))+
-  theme(strip.text = element_text(colour = 'black'))+
-  labs(x = "DOY", y = "Soil moisture (%)")
+  theme_minimal(base_size = 20)+
+  # theme(strip.background = element_rect(color = "black", fill = "white"))+
+  # theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Day", y = "Soil moisture (%)", color = "Water")
 
 ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
@@ -112,6 +114,14 @@ ggplot(filter(vwc_comp, water == "drought"), aes(x = yday(date), y = vwc_frac))+
   theme_light(base_size = 20)+
   labs(x = "Julian day", y = "Fraction of max soil moisture", linetype = "Species", fill = "Species")
 #ggsave("figures/VWCfrac_Box_preHW.jpg", last_plot(), width = 8, height = 5)
+
+
+ggplot(vwc_comp, aes(x = yday(date)-202, y = vwc_frac))+
+  geom_point(pch = 1, alpha = 0.2)+
+  geom_line(aes(group = TreeID, color = water), alpha = 0.7)+
+  facet_wrap(~spp)+
+  theme_minimal(base_size = 20)+
+  labs(x = "Day", y = "Fraction of max soil moisture", linetype = "Species", fill = "Species")
 
 
 soil_avgs <- filter(vwc_comp, date >= as.POSIXct("2025-10-05") &

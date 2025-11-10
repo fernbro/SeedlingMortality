@@ -65,7 +65,8 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
                          .default = "high elevation"),
          chamber = factor(chamber)) %>% 
   mutate(vpd = calc_vpd(temp, rh)) %>% 
-  filter(datetime > as.POSIXct("2025-07-21"))
+  filter(datetime >= as.POSIXct("2025-07-21")) %>% 
+  mutate(day = yday(datetime)-202)
 
 
 # chamber_wide <- chamber_data %>% 
@@ -88,7 +89,7 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #   mutate(doy = yday(datetime))
 
 
-ggplot(filter(chamber_data), aes(x = (datetime), y = temp))+
+ggplot(filter(chamber_data), aes(x = day, y = temp))+
   geom_line(aes(linetype = chamber, color = kest))+
   #geom_point(aes(shape = set))+
   labs(x = "Date", y = "Temperature (ºC)",

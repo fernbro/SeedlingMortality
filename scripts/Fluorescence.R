@@ -5,6 +5,7 @@ water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 dates <- read_csv("data/Experiment/Dates.csv") %>% 
   mutate(date = as.POSIXct(date, tryFormats = "%m/%e/%y"))
 hw_colors <- c("blue", "red")
+hw_days <- c(19,25)
 
 fl_files <- list.files("data/Experiment/Raw/Fluorescence", full.names = T)
 
@@ -24,7 +25,8 @@ fluor <- bind_rows(fl_dat) %>%
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought")) %>% 
-  inner_join(dates)
+  inner_join(dates) %>% 
+  mutate(day = yday(date)-202)
   # group_by(Fv_Fm_dark, spp, water) %>% 
   # mutate(n_obs = n())
 
@@ -39,17 +41,19 @@ dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1)) %>%
   unique()
 # PLUS psme22 and pipo56 (removed before 2 weeks of fl<0.1 bc of mold)
 
-ggplot(fluor, aes(x = yday(date)-start_exp, y = Fv_Fm_dark, group = spp))+
-  geom_line(alpha = 0.4, aes(group = TreeID, linetype = temp))+
+ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
+  geom_line(alpha = 0.3, aes(group = TreeID, linetype = temp))+
   geom_point(aes(group = interaction(date, water), fill = water, color = water,
                  shape = temp), 
-             size = 2, alpha = 0.5)+
+             size = 3, alpha = 0.5)+
   facet_wrap(~spp)+
+  annotate("rect", alpha = 0.5, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 0.85,
+           fill = "orange")+
   # scale_fill_manual(values = hw_colors)+
   scale_shape_manual(values=c(21,22))+
-  theme_light(base_size = 26)+
-  theme(strip.background = element_rect(color = "black", fill = "white"))+
-  theme(strip.text = element_text(colour = 'black'))+
+  theme_minimal(base_size = 26)+
+  # theme(strip.background = element_rect(color = "black", fill = "white"))+
+  # theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Day", y = "Fv/Fm", shape = "Temp", linetype = "Temp", color = "Water", fill = "Water")
 # ggsave("figures/FvFm090225.png", width = 10, height = 8, units = "in")
 
@@ -86,8 +90,8 @@ fl_avg <- fluor %>%
   summarise(f_mean = mean(Fv_Fm_dark, na.rm = T), f_sd = sd(Fv_Fm_dark, na.rm = T))
 
 ggplot(filter(fl_avg), aes(x = week, y = f_mean, color = water))+
-  # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0.5, ymax = 0.85,
-  #          fill = "orange")+
+  annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0.5, ymax = 0.85,
+           fill = "orange")+
   geom_point(size = 3, pch = 1)+
   geom_errorbar(aes(ymin = f_mean - f_sd, ymax = f_mean + f_sd),
                 width = 0.1, alpha = 0.7)+

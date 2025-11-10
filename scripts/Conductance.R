@@ -5,6 +5,7 @@ water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 dates <- read_csv("data/Experiment/Dates.csv") %>% 
   mutate(date = as.POSIXct(date, tryFormats = "%m/%e/%y"))
 hw_colors <- c("blue", "red")
+hw_days <- c(19,25)
 
 con_files <- list.files("data/Experiment/Raw/Conductance", full.names = T)
 
@@ -25,7 +26,8 @@ con <- bind_rows(con_dat) %>%
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought")) %>%
   inner_join(dates) %>% 
-  filter(con > 10, con < 500)
+  filter(con > 10, con < 500) %>% 
+  mutate(day = yday(date)-202)
 
 write_csv(con, "data/Experiment/Processed/Conductance.csv")
 
@@ -104,17 +106,26 @@ ggplot(filter(con_avg), aes(x = factor(week), y = c_mean, color = water))+
   theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Week", y = "Conductance (mmol/m2s)")
 
-ggplot(filter(con), aes(x = yday(date)-start_exp, y = con, color = water))+
-  # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 500,
-  #          fill = "orange")+
+ggplot(filter(con), aes(x = day, y = con, color = water))+
+  annotate("rect", alpha = 0.5, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 500,
+           fill = "orange")+
   geom_point(size = 2, alpha = 0.5)+
-  # geom_errorbar(aes(ymin = c_mean - c_sd, ymax = c_mean + c_sd),
-  #               width = 0.1, alpha = 0.7)+
+  geom_vline(xintercept = 90, color = "gray50")+
   facet_wrap(~spp + temp, ncol = 4)+
   geom_smooth(alpha = 0.4, aes(fill = water))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Day", y = "Conductance (mmol/m2s)", fill = "Water", color = "Water")
+
+ggplot(filter(con), aes(x = day, y = con, color = water))+
+  annotate("rect", alpha = 0.5, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 500,
+           fill = "orange")+
+  geom_point(size = 2, alpha = 0.5)+
+  geom_vline(xintercept = 90, color = "gray50")+
+  facet_wrap(~temp + spp, ncol = 4)+
+  geom_smooth(alpha = 0.4, aes(fill = water), method = "gam")+
+  theme_minimal(base_size = 20)+
   labs(x = "Day", y = "Conductance (mmol/m2s)", fill = "Water", color = "Water")
 
 

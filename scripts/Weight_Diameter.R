@@ -34,11 +34,12 @@ morph <- bind_rows(morph_dat) %>%
                                       Brown_perc == "90" ~ "82.5",
                                       Brown_perc == ">9" ~ "95")),
          date = date(date)) %>% 
+  mutate(day = yday(date)-202) %>% 
   select(-Brown_perc) %>% 
   inner_join(weeks)
 
 morph %>% 
-  select(date, spp, TreeID, id, temp, water, brown) %>% 
+  select(date, day, spp, TreeID, id, temp, water, brown) %>% 
   write_csv("data/Experiment/Processed/Ocular_Color.csv")
 
 ggplot(morph, aes(x = yday(date), y = Pot_weight_g))+
