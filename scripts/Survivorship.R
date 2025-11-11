@@ -14,7 +14,7 @@ brown <- read_csv("data/Experiment/Processed/Ocular_Color.csv") %>%
 # ummm what is going on here bruh
 ggplot(brown, aes(x = day, y = brown))+
   geom_line(aes(group = TreeID, color = spp), alpha = 0.6)+
-  # geom_point(aes(color = spp))+
+  geom_point(aes(color = spp))+
   # geom_smooth(aes(group = spp))+
   theme_minimal(base_size = 20)+
   facet_wrap(~water+temp)+

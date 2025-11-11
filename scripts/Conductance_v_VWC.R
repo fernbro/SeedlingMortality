@@ -13,13 +13,28 @@ con_vwc <- inner_join(con, vwc) %>%
 
 ggplot(con_vwc, aes(x = vwc, y = con))+
   geom_point(aes(color = spp, shape = water))+
-  geom_smooth(aes(fill = spp, color = spp), method = "lm", alpha = 0.2)+
+  geom_smooth(aes(fill = spp, color = spp), alpha = 0.2)+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
   facet_wrap(~temp)+
   labs(x = "Volumetric water content (%)", y = "Conductance (mmol/m2/s)")
 
+vwc2 <- (lm(con ~ poly(vwc, 2) * spp, data = con_vwc));summary(vwc2)
+
+vwc2_p <- data.frame(predict.lm(vwc2, interval = "confidence")) %>% 
+  bind_cols(con_vwc)
+
+ggplot(vwc2_p, aes(x = vwc, y = con))+
+  geom_point(aes(color = spp, shape = water))+
+  geom_line(aes(y = fit, color = spp))+
+  geom_ribbon(aes(ymax = upr, ymin = lwr, fill = spp), alpha = 0.3)+
+  theme_minimal(base_size = 20)+
+  # theme(strip.background = element_rect(color = "black", fill = "white"))+
+  # theme(strip.text = element_text(colour = 'black'))+
+  facet_wrap(~temp)+
+  labs(x = "Volumetric water content (%)", y = "Conductance (mmol/m2/s)",
+       fill = "Species", shape = "Water", color = "Species")
 
 # model 1: fitting mixed model with random effect of species
             mixedmod <- lmer(con ~ 1 + VWC_perc + (1 + VWC_perc | (spp)), con_vwc, REML = F)
