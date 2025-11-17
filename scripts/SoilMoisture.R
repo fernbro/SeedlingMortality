@@ -42,16 +42,26 @@ write_csv(vwc, "data/Experiment/Processed/VWC.csv")
 ggplot(vwc_sum, aes(x = day, y = vwc_mean))+
   # annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 20,
   #          fill = "orange")+
-  facet_wrap(~temp+spp, ncol = 4)+
-  geom_point(aes(color = water))+
+  facet_wrap(~spp)+
+  geom_point(aes(color = water, shape = temp))+
   geom_hline(yintercept = 0, alpha = 0.3)+
-  geom_line(aes(color = water))+
+  # geom_line(aes(color = water, linetype = temp))+
   geom_errorbar(aes(color = water, ymin = vwc_mean - vwc_sd, ymax = vwc_mean + vwc_sd),
                 width = 0.1)+
   theme_minimal(base_size = 20)+
   # theme(strip.background = element_rect(color = "black", fill = "white"))+
   # theme(strip.text = element_text(colour = 'black'))+
-  labs(x = "Day", y = "Soil moisture (%)", color = "Water")
+  labs(x = "Day", y = "Soil moisture (%)", color = "Water", shape = "Temp", linetype = "Temp")
+
+ggplot(vwc, aes(x = day, y = VWC_perc))+
+  facet_wrap(~spp+temp, ncol = 4)+
+  geom_point(aes(color = water, shape = temp))+
+  geom_hline(yintercept = 0, alpha = 0.3)+
+  geom_line(aes(color = water, linetype = temp, group = TreeID))+
+  theme_minimal(base_size = 20)+
+  # theme(strip.background = element_rect(color = "black", fill = "white"))+
+  # theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Day", y = "Soil moisture (%)", color = "Water", shape = "Temp", linetype = "Temp")
 
 ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+

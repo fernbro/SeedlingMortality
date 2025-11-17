@@ -111,7 +111,7 @@ ggplot(filter(con), aes(x = day, y = con, color = water))+
            fill = "orange")+
   geom_point(size = 2, alpha = 0.5)+
   geom_vline(xintercept = 90, color = "gray50")+
-  facet_wrap(~spp + temp, ncol = 4)+
+  facet_wrap(~temp + spp, ncol = 4)+
   geom_smooth(alpha = 0.4, aes(fill = water))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
