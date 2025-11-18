@@ -35,7 +35,7 @@ write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1)) %>% 
   group_by(TreeID) %>% 
   mutate(weeks_dead = n()) %>% 
-  filter(weeks_dead >= 2) %>% 
+  filter(weeks_dead >= 2) %>%
   select(TreeID) %>% 
   arrange(TreeID) %>% 
   unique()
