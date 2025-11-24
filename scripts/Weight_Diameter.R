@@ -42,7 +42,7 @@ morph %>%
   select(date, day, spp, TreeID, id, temp, water, brown) %>% 
   write_csv("data/Experiment/Processed/Ocular_Color.csv")
 
-ggplot(morph, aes(x = yday(date), y = Pot_weight_g))+
+ggplot(morph, aes(x = day, y = Pot_weight_g))+
   # geom_line(alpha = 0.4, aes(group = TreeID, color = water, linetype = temp))+
   geom_point(size = 2, alpha = 0.4, aes(group = TreeID, color = water, shape = temp))+
   #geom_point(aes(shape = spp))+
@@ -53,7 +53,7 @@ ggplot(morph, aes(x = yday(date), y = Pot_weight_g))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
-  labs(x = "DOY", y = "Weight (g) ", color = "Water", fill = "Water", 
+  labs(x = "Day", y = "Weight (g) ", color = "Water", fill = "Water", 
        linetype = "Temperature", shape = "Temperature")+
   facet_wrap(~spp)
 
