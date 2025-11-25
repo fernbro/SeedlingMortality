@@ -89,7 +89,7 @@ ggplot(tree_fl, aes(x = time, y = life))+
 library(ggfortify)
 # from Allie's code:
 km <- with(tree_fl, Surv(time, life))
-km_fit <- survfit(Surv(time, life) ~ spp, data=filter(tree_fl, water == "drought"))
+km_fit <- survfit(Surv(time, life) ~ spp + temp, data=filter(tree_fl, water == "drought"))
 plot(km_fit)
 autoplot(km_fit)+
   theme_minimal(base_size = 20)+
