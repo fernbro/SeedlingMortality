@@ -32,7 +32,7 @@ fluor <- bind_rows(fl_dat) %>%
 
 write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
-dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1)) %>% 
+dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1, water == "drought")) %>%  
   group_by(TreeID) %>% 
   mutate(weeks_dead = n()) %>% 
   filter(weeks_dead >= 2) %>%
@@ -40,18 +40,20 @@ dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1)) %>%
   arrange(TreeID) %>% 
   unique()
 # PLUS psme22 and pipo56 (removed before 2 weeks of fl<0.1 bc of mold)
+# all droughted FLUORESCED of PIEN, PIPO, and PSME are dead as of 11/30/2025
 
 ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
   geom_line(alpha = 0.3, aes(group = TreeID, linetype = temp))+
   geom_point(aes(group = interaction(date, water), fill = water, color = water,
                  shape = temp), 
-             size = 3, alpha = 0.5)+
+             size = 2, alpha = 0.5)+
   facet_wrap(~spp)+
   annotate("rect", alpha = 0.5, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 0.85,
            fill = "orange")+
   # scale_fill_manual(values = hw_colors)+
   scale_shape_manual(values=c(21,22))+
   theme_minimal(base_size = 26)+
+  # geom_smooth(aes(group = interaction(water, temp), fill = temp))+
   # theme(strip.background = element_rect(color = "black", fill = "white"))+
   # theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Day", y = "Fv/Fm", shape = "Temp", linetype = "Temp", color = "Water", fill = "Water")

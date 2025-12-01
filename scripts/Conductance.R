@@ -56,17 +56,18 @@ ggplot(filter(con, temp == "heatwave"), aes(x = yday(date), y = con,
   theme_light(base_size = 20)+
   labs(x = "Julian Day", y = "Stomatal conductance (mmol/m2s)")
 
-ggplot(con, aes(x = yday(date), y = con, group = interaction(spp, temp, water)))+
-  annotate("rect", alpha = 0.5, xmin = 220, xmax = 227, ymin = 0, ymax = 500,
-           fill = "orange")+
+ggplot(con, aes(x = yday(date), y = log(con), group = interaction(spp, temp, water)))+
+  # annotate("rect", alpha = 0.5, xmin = 220, xmax = 227, ymin = 0, ymax = 500,
+  #          fill = "orange")+
   # geom_point(alpha = 0.7, aes(color = water))+
-  geom_hline(yintercept = 81.15)+
-  geom_smooth(aes(color = water, fill = water), se = T, alpha = 0.3,
+  # geom_hline(yintercept = 81.15)+
+  geom_smooth(aes(color = water, linetype = temp, fill = water), se = T, alpha = 0.3,
               span = 0.5)+
-  facet_wrap(~interaction(temp, spp), nrow = 4)+
+  facet_wrap(~interaction(spp), nrow = 2)+
   theme_light(base_size = 20)+
   labs(x = "Julian Day", y = "Stomatal conductance (mmol/m2s)")
 
+TukeyHSD(aov(con ~ temp:spp:water, con))
 
 ######
 
@@ -84,7 +85,7 @@ ggplot(data = con, aes(x = day, y = (con), group = interaction(spp, temp, water)
   geom_hline(yintercept = 81)+
   # geom_smooth(method = "lm", aes(fill = temp))+
   geom_line(aes(group = TreeID), alpha = 0.2)+
-  scale_color_manual(values = hw_colors)+
+  # scale_color_manual(values = hw_colors)+
   facet_wrap(~temp+spp, nrow = 2)+
   theme_minimal(base_size = 20)+
   labs(x = "Day", y = "Conductance (mmol/m2s)")
