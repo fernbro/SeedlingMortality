@@ -29,6 +29,9 @@ con <- bind_rows(con_dat) %>%
   filter(con > 10, con < 500) %>% 
   mutate(day = yday(date)-202)
 
+
+# Create a label for when the sensor changed and then can group the regressions/points by sensor
+
 write_csv(con, "data/Experiment/Processed/Conductance.csv")
 
 # determine effective 0 conductance:
@@ -93,7 +96,7 @@ ggplot(data = con, aes(x = day, y = (con), group = interaction(spp, temp, water)
 # avgs by spp and treatments over time
 con_avg <- con %>% 
   dplyr::group_by(spp, water, temp, week) %>% 
-  dplyr::summarise(c_mean = mean(con), c_sd = sd(con))
+  dplyr::summarise(c_mean = mean(con, na.rm = T), c_sd = sd(con, na.rm = T))
 
 ggplot(filter(con_avg), aes(x = factor(week), y = c_mean, color = water))+
   annotate("rect", alpha = 0.5, xmin = 3.5, xmax = 4.5, ymin = 0, ymax = 500,
