@@ -49,4 +49,3 @@ ggplot(tree_fl, aes(x = day, y = life))+
   facet_wrap(~spp)+
   theme_minimal(base_size = 20)+
   labs(x = "Day", y = "% mortality")
-
