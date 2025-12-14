@@ -43,11 +43,11 @@ dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1, water == "drought")) %>%
 # all droughted FLUORESCED of PIEN, PIPO, and PSME are dead as of 11/30/2025
 
 ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
-  geom_hline(yintercept = 0.1, color = "red", size = 1.5, alpha = 0.1)+
-  geom_line(alpha = 0.2, aes(group = TreeID, linetype = temp))+
+  geom_hline(yintercept = 0.1, color = "red", linewidth = 1.5, alpha = 0.1)+
+  geom_line(alpha = 0.3, aes(group = TreeID, linetype = temp))+
   geom_point(aes(group = interaction(date, water), fill = water, color = water,
                  shape = temp), 
-             size = 2, alpha = 0.5)+
+             size = 2, alpha = 0.6)+
   facet_wrap(~spp)+
   annotate("rect", alpha = 0.3, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 0.85,
            fill = "orange")+

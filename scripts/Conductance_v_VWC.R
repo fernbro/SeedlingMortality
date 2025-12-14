@@ -21,6 +21,7 @@ ggplot(con_vwc, aes(x = vwc, y = con))+
   labs(x = "Volumetric water content (%)", y = "Conductance (mmol/m2/s)")
 
 vwc2 <- (lm(con ~ poly(vwc, 2) * spp, data = con_vwc));summary(vwc2)
+# vwc2 <- (lm(con ~ vwc * spp, data = con_vwc));summary(vwc2)
 
 vwc2_p <- data.frame(predict.lm(vwc2, interval = "confidence")) %>% 
   bind_cols(con_vwc)
