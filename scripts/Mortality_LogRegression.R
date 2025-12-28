@@ -10,13 +10,13 @@ dead_trees <- (filter(fl, Fv_Fm_dark < 0.1)) %>%
   group_by(TreeID) %>%
   unique() %>% 
   mutate(life = 0) %>% 
-  select(TreeID, spp, date, life, temp, water, day)
+  dplyr::select(TreeID, spp, date, life, temp, water, day)
 
 alive_trees <- (filter(fl, Fv_Fm_dark >= 0.1)) %>% 
   group_by(TreeID) %>%
   unique() %>% 
   mutate(life = 1) %>% 
-  select(TreeID, spp, date, life, temp, water, day)
+  dplyr::select(TreeID, spp, date, life, temp, water, day)
 
 tree_fl <- rbind(dead_trees, alive_trees) %>% 
   mutate(time = yday(date)-202)
@@ -73,12 +73,23 @@ get_LD50 = function(fit){
 ld50s <- tree_fl %>% 
   filter(water == "drought") %>% 
   group_by(temp, spp) %>% 
-  do(get_LD50(glm(life ~ day, family = "binomial", data = .)))
+  do(get_LD50(glm(life ~ day, family = "binomial", data = .))) %>% 
+  mutate(ci_lo = LD50-CI, ci_hi = LD50+CI)
 
-ggplot(ld50s, aes(x = LD50, y = spp, color = temp))+
-  geom_errorbar(aes(xmin = LD50-CI, xmax = LD50+CI), width = 0.2)+
+ggplot(ld50s, aes(x = LD50, y = spp, shape = temp, color = temp))+
+  geom_errorbar(aes(xmin = LD50-CI, xmax = LD50+CI), width = 0.2, alpha = 0.6)+
   geom_point(size = 2)+
   theme_minimal(base_size = 20)+
   labs(x = "Drought days needed for 50% mortality",
        y = "Species",
        color = "Temp")
+
+ggplot(ld50s, aes(y = LD50, x = spp, shape = temp, color = temp))+
+  geom_errorbar(aes(ymin = LD50-CI, ymax = LD50+CI), width = 0.2, alpha = 0.6)+
+  geom_point(size = 2)+
+  theme_minimal(base_size = 20)+
+  labs(y = "Drought days LD50",
+       x = "Species",
+       color = "Temp")
+
+
