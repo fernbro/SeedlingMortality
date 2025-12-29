@@ -82,7 +82,7 @@ ggplot(ld50s, aes(x = LD50, y = spp, shape = temp, color = temp))+
   theme_minimal(base_size = 20)+
   labs(x = "Drought days needed for 50% mortality",
        y = "Species",
-       color = "Temp")
+       color = "Temp", shape = "Temp")
 
 ggplot(ld50s, aes(y = LD50, x = spp, shape = temp, color = temp))+
   geom_errorbar(aes(ymin = LD50-CI, ymax = LD50+CI), width = 0.2, alpha = 0.6)+

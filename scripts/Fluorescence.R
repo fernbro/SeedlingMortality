@@ -17,11 +17,11 @@ for(i in 1:length(fl_dat)){
 }
 
 fluor <- bind_rows(fl_dat) %>% 
-  select(TreeID, Fv_Fm_dark, textdate) %>% 
+  dplyr::select(TreeID, Fv_Fm_dark, textdate) %>% 
   mutate(date = date(as.POSIXct(textdate, tryFormats = "%m%d%Y")),
          spp = str_sub(TreeID, start = 1, end = 4),
          id = as.numeric(str_sub(TreeID, start = 5, end = 6))) %>% 
-  select(-textdate) %>%
+  dplyr::select(-textdate) %>%
   mutate(temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
@@ -37,7 +37,7 @@ dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1, water == "drought")) %>%
   group_by(TreeID) %>% 
   mutate(weeks_dead = n()) %>% 
   filter(weeks_dead >= 2) %>%
-  select(TreeID) %>% 
+  dplyr::select(TreeID) %>% 
   arrange(TreeID) %>% 
   unique()
 # PLUS psme22 and pipo56 (removed before 2 weeks of fl<0.1 bc of mold)
@@ -53,8 +53,8 @@ ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
                  shape = temp), 
              size = 2, alpha = 0.6)+
   facet_wrap(~spp, ncol = 1)+
-  # annotate("rect", alpha = 0.3, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 0.85,
-  #          fill = "orange")+
+  annotate("rect", alpha = 0.3, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 0.85,
+           fill = "orange")+
   # scale_fill_manual(values = hw_colors)+
   scale_shape_manual(values=c(21,22))+
   theme_minimal(base_size = 15)+

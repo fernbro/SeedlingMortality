@@ -26,7 +26,7 @@ vwc <- bind_rows(vwc_dat) %>%
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought")) %>% 
-  select(-textdate) %>% 
+  dplyr::select(-textdate) %>% 
   data.frame() %>% 
   mutate(day = yday(date)-202)
 

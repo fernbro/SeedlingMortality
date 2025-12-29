@@ -22,7 +22,7 @@ morph <- bind_rows(morph_dat) %>%
          id = as.numeric(str_sub(TreeID, start = 5, end = 6)),
          Brown_perc = str_sub(Perc_brown, start = 1, end = 2),
          Diam_mm = round(Diameter_mm, 1)) %>%  # rounded diameter
-  select(-textdate, -Perc_brown, -Diameter_mm) %>% 
+  dplyr::select(-textdate, -Perc_brown, -Diameter_mm) %>% 
   mutate(temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
@@ -35,11 +35,11 @@ morph <- bind_rows(morph_dat) %>%
                                       Brown_perc == ">9" ~ "95")),
          date = date(date)) %>% 
   mutate(day = yday(date)-202) %>% 
-  select(-Brown_perc) %>% 
+  dplyr::select(-Brown_perc) %>% 
   inner_join(weeks)
 
 morph %>% 
-  select(date, day, spp, TreeID, id, temp, water, brown) %>% 
+  dplyr::select(date, day, spp, TreeID, id, temp, water, brown) %>% 
   write_csv("data/Experiment/Processed/Ocular_Color.csv")
 
 ggplot(morph, aes(x = day, y = Pot_weight_g))+
@@ -59,13 +59,14 @@ ggplot(morph, aes(x = day, y = Pot_weight_g))+
 
 morph_sub <- filter(morph, TreeID %in% sub4phys)
 
-ggplot(morph_sub, aes(x = week, y = Diam_mm))+
+ggplot(morph_sub, aes(x = day, y = Diam_mm))+
   # geom_boxplot(alpha = 0.3, aes(group = interaction(date, spp), fill = spp))+
-  geom_point()+
-  geom_smooth(method = "lm", aes(group = TreeID), se = F, linewidth = 0.1)+
-  facet_wrap(~interaction(water, spp), nrow = 4)+
-  theme_light()+
-  labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
+  # geom_point()+
+  geom_boxplot(aes(group = interaction(water, day)))+
+  geom_smooth(method = "lm", se = T, linewidth = 0.1, aes(fill = water))+
+  facet_wrap(~spp)+
+  theme_minimal(base_size = 20)+
+  labs(x = "Day", y = "Stem diameter (mm)", fill = "Water")
 
 ggplot(morph, aes(x = week, y = Diam_mm))+
   # geom_smooth(method = "lm", aes(fill = water))+

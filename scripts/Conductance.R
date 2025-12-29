@@ -27,7 +27,8 @@ con <- bind_rows(con_dat) %>%
                            .default = "drought")) %>%
   inner_join(dates) %>% 
   filter(con > 10, con < 500) %>% 
-  mutate(day = yday(date)-202)
+  mutate(day = yday(date)-202) %>% 
+  mutate(sensor = case_when(day < 90 ~ 1, day >= 90 ~ 2))
 
 
 # Create a label for when the sensor changed and then can group the regressions/points by sensor
@@ -41,7 +42,7 @@ write_csv(con, "data/Experiment/Processed/Conductance.csv")
 ggplot(data = con, aes(x = yday(date), y = con, group = interaction(spp, temp, water)))+
   geom_point(alpha = 0.7, aes(color = water))+
   geom_hline(yintercept = 81.15)+
-  geom_smooth(method = "lm", aes(color = water, fill = water), se = T, alpha = 0.3)+
+  geom_smooth(method = "lm", aes(group = interaction(sensor, water), color = water, fill = water), se = T, alpha = 0.3)+
   facet_wrap(~interaction(temp, spp), nrow = 4)+
   theme_light(base_size = 20)+
   labs(x = "Julian Day", y = "Stomatal conductance (mmol/m2s)")
@@ -53,7 +54,7 @@ ggplot(filter(con, temp == "heatwave"), aes(x = yday(date), y = con,
            fill = "orange")+
   geom_point(alpha = 0.7, aes(color = water))+
   geom_hline(yintercept = 81.15)+
-  geom_smooth(aes(color = water, fill = water), se = T, alpha = 0.3,
+  geom_smooth(aes(group = interaction(sensor, water), color = water, fill = water), se = T, alpha = 0.3,
               span = 0.5)+
   facet_wrap(~interaction(temp, spp), nrow = 4)+
   theme_light(base_size = 20)+
@@ -116,7 +117,7 @@ ggplot(filter(con), aes(x = day, y = con, color = water))+
   geom_point(size = 2, alpha = 0.5)+
   geom_vline(xintercept = 90, color = "gray50")+
   facet_wrap(~temp + spp, ncol = 4)+
-  geom_smooth(alpha = 0.4, aes(fill = water))+
+  geom_smooth(alpha = 0.4, aes(group = interaction(sensor, water), fill = water))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
@@ -128,7 +129,7 @@ ggplot(filter(con), aes(x = day, y = con, color = water))+
   geom_point(size = 2, alpha = 0.5)+
   geom_vline(xintercept = 90, color = "gray50")+
   facet_wrap(~temp + spp, ncol = 4)+
-  geom_smooth(alpha = 0.4, aes(fill = water), method = "gam")+
+  geom_smooth(alpha = 0.4, aes(group = interaction(water, sensor), fill = water))+
   theme_minimal(base_size = 20)+
   labs(x = "Day", y = "Conductance (mmol/m2s)", fill = "Water", color = "Water")
 
