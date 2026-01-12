@@ -25,9 +25,10 @@ con <- bind_rows(con_dat) %>%
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought")) %>%
-  inner_join(dates) %>% 
-  filter(con > 10, con < 500) %>% 
-  mutate(day = yday(date)-202) %>% 
+  full_join(dates) %>% 
+  filter(con > 10, con < 500, !is.na(con)) %>% 
+  mutate(day = case_when(year(date) == 2025 ~ yday(date)-202,
+                         year(date) == 2026 ~ 365 - 202 + yday(date))) %>% 
   mutate(sensor = case_when(day < 90 ~ 1, day >= 90 ~ 2))
 
 

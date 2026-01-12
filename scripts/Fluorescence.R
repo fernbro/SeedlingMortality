@@ -26,14 +26,17 @@ fluor <- bind_rows(fl_dat) %>%
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought")) %>% 
-  inner_join(dates) %>% 
-  mutate(day = yday(date)-202)
+  full_join(dates) %>% 
+  mutate(day = case_when(year(date) == 2025 ~ yday(date)-202,
+                         year(date) == 2026 ~ 365 - 202 + yday(date))) %>% 
+  filter(!is.na(Fv_Fm_dark))
   # group_by(Fv_Fm_dark, spp, water) %>% 
   # mutate(n_obs = n())
 
 write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
 dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1, water == "drought")) %>%  
+  filter(spp=="PIFL") %>% 
   group_by(TreeID) %>% 
   mutate(weeks_dead = n()) %>% 
   filter(weeks_dead >= 2) %>%
@@ -61,8 +64,9 @@ ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
   # geom_smooth(aes(group = interaction(water, temp), fill = temp, linetype = water))+
   # theme(strip.background = element_rect(color = "black", fill = "white"))+
   # theme(strip.text = element_text(colour = 'black'))+
-  labs(x = "Day", y = "Fv/Fm", shape = "Temp", linetype = "Temp", color = "Water", fill = "Water")
-# ggsave("figures/FvFm090225.png", width = 10, height = 8, units = "in")
+  labs(x = "Day", y = "Fv/Fm", shape = "Temp", linetype = "Temp", color = "Water", fill = "Water")+
+  theme(panel.background = element_rect(fill = 'white'), plot.background = element_rect(fill = 'white'))
+ggsave("figures/FvFm01122026.png", width = 10, height = 10, units = "in")
 
 
 # new aesthetics:
@@ -83,4 +87,6 @@ ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
   labs(x = "Day", y = "Fv/Fm", 
        shape = "Water", 
        linetype = "Temp",
-       fill = "Temp")
+       fill = "Temp")+
+  theme(panel.background = element_rect(fill = 'white'), plot.background = element_rect(fill = 'white'))
+# ggsave("figures/FvFm01122026_WaterTreatments.png", width = 10, height = 10, units = "in")
