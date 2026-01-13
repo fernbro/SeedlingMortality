@@ -1,2 +1,2 @@
 # SeedlingMortality
-data, code etc. for southwest resilience project seedling mortality experiment of summer 2025!
+data, code etc. for southwest resilience project seedling mortality experiment of 2025-2026.
