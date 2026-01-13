@@ -40,6 +40,13 @@ write_csv(con, "data/Experiment/Processed/Conductance.csv")
 # mean(c(84.4, 82, 80.1, 78.1)) # mean of values in mmol/m2s on Whatman Paper = 81.15 mmol/m2/s
 
 
+
+
+
+
+
+# plots:
+
 ggplot(data = con, aes(x = yday(date), y = con, group = interaction(spp, temp, water)))+
   geom_point(alpha = 0.7, aes(color = water))+
   geom_hline(yintercept = 81.15)+
@@ -72,7 +79,7 @@ ggplot(con, aes(x = yday(date), y = log(con), group = interaction(spp, temp, wat
   theme_light(base_size = 20)+
   labs(x = "Julian Day", y = "Stomatal conductance (mmol/m2s)")
 
-TukeyHSD(aov(con ~ temp:spp:water, con))
+anova(lm(con ~ spp*day, con))
 
 ######
 

@@ -34,9 +34,11 @@ morph <- bind_rows(morph_dat) %>%
                                       Brown_perc == "90" ~ "82.5",
                                       Brown_perc == ">9" ~ "95")),
          date = date(date)) %>% 
-  mutate(day = yday(date)-202) %>% 
+  mutate(day = case_when(year(date) == 2025 ~ yday(date)-202,
+                               year(date) == 2026 ~ 365 - 202 + yday(date))) %>% 
   dplyr::select(-Brown_perc) %>% 
-  inner_join(weeks)
+  full_join(weeks) %>% 
+  filter(!is.na(Pot_weight_g))
 
 morph %>% 
   dplyr::select(date, day, spp, TreeID, id, temp, water, brown) %>% 
@@ -57,6 +59,81 @@ ggplot(morph, aes(x = day, y = Pot_weight_g))+
        linetype = "Temperature", shape = "Temperature")+
   facet_wrap(~spp)
 
+
+ggplot(morph, aes(x = day, y = Pot_weight_g))+
+  # geom_line(alpha = 0.4, aes(group = TreeID, color = water, linetype = temp))+
+  geom_point(size = 2, alpha = 0.4, aes(group = TreeID, color = water, shape = temp))+
+  geom_smooth(aes(fill = water, linetype = temp,
+                  group = TreeID))+
+  theme_light(base_size = 20)+
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Day", y = "Weight (g) ", color = "Water", fill = "Water", 
+       linetype = "Temperature", shape = "Temperature")+
+  facet_wrap(~spp)
+
+# calculate weight inflection points:
+
+# fit a loess smoother to each individual
+
+ind <- unique(morph$TreeID)
+
+# https://stackoverflow.com/questions/50163106/loess-regression-on-each-group-with-dplyrgroup-by
+
+# actually probably want to fit a GAM
+
+library(mgcv)
+
+models <- morph %>% 
+  tidyr::nest(data = -TreeID) %>% 
+  dplyr::mutate(m = map(data, gam, 
+                        formula = Pot_weight_g ~ day),
+                fitted = map(m, `[[`, "fitted")
+  )
+
+results <- models %>%
+  dplyr::select(-m) %>%
+  tidyr::unnest(cols = c(data,fitted))
+
+# check this post:
+# https://stackoverflow.com/questions/79181587/using-map-with-gam-model
+
+#https://stackoverflow.com/questions/6356665/how-do-i-plot-the-first-derivative-of-the-smoothing-function
+# dY <- diff(results$fitted)/diff(results$day) 
+# dX <- rowMeans(embed(results$day, 2))
+# 
+# plot(dX, dY)
+
+# diff() utilizes lagged differences, so it's like a "piecewise" derivative; i want a smooth function
+
+#https://stats.stackexchange.com/questions/76959/finding-inflection-points-in-r-from-smoothed-data#:~:text=To%20find%20inflection%20points%20in%20smoothed%20data,dependent%20on%20the%20smoothing%20function%20you%20use.
+
+results <- results %>% 
+  arrange(day) %>% 
+  group_by(TreeID) %>% 
+  mutate(infl = case_when(diff(diff(fitted)) == 0 ~ T,
+                          .default = F))
+
+infl <- c(FALSE, diff(diff(results$fitted)>0)!=0)
+
+# let's try the inflection package:
+
+library(inflection)
+
+
+
+
+# changepoint analysis?
+# install.packages("changepoint")
+library(changepoint)
+
+
+
+
+
+
+
+###############
 morph_sub <- filter(morph, TreeID %in% sub4phys)
 
 ggplot(morph_sub, aes(x = day, y = Diam_mm))+
