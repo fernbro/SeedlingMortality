@@ -1,4 +1,5 @@
 library(tidyverse)
+library(rootSolve) # for derivatives
 
 start_exp <- yday(as.POSIXct("2025-07-21"))
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
@@ -20,25 +21,26 @@ morph <- bind_rows(morph_dat) %>%
   mutate(date = as.POSIXct(textdate, tryFormats = "%m%d%Y"),
          spp = str_sub(TreeID, start = 1, end = 4),
          id = as.numeric(str_sub(TreeID, start = 5, end = 6)),
-         Brown_perc = str_sub(Perc_brown, start = 1, end = 2),
-         Diam_mm = round(Diameter_mm, 1)) %>%  # rounded diameter
+         brown_perc = str_sub(Perc_brown, start = 1, end = 2),
+         diam_mm = round(Diameter_mm, 1)) %>%  # rounded diameter
   dplyr::select(-textdate, -Perc_brown, -Diameter_mm) %>% 
   mutate(temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought"),
-         brown = as.numeric(case_when(Brown_perc == "10" ~ "5",
-                                      Brown_perc == "25" ~ "17.5",
-                                      Brown_perc == "50" ~ "37.5",
-                                      Brown_perc == "75" ~ "62.5",
-                                      Brown_perc == "90" ~ "82.5",
-                                      Brown_perc == ">9" ~ "95")),
-         date = date(date)) %>% 
+         brown = as.numeric(case_when(brown_perc == "10" ~ "5",
+                                      brown_perc == "25" ~ "17.5",
+                                      brown_perc == "50" ~ "37.5",
+                                      brown_perc == "75" ~ "62.5",
+                                      brown_perc == "90" ~ "82.5",
+                                      brown_perc == ">9" ~ "95")),
+         date = date(date),
+         weight = Pot_weight_g) %>% 
   mutate(day = case_when(year(date) == 2025 ~ yday(date)-202,
                                year(date) == 2026 ~ 365 - 202 + yday(date))) %>% 
-  dplyr::select(-Brown_perc) %>% 
+  dplyr::select(-brown_perc, -Pot_weight_g) %>% 
   full_join(weeks) %>% 
-  filter(!is.na(Pot_weight_g))
+  filter(!is.na(weight))
 
 morph %>% 
   dplyr::select(date, day, spp, TreeID, id, temp, water, brown) %>% 
@@ -127,6 +129,94 @@ library(inflection)
 # install.packages("changepoint")
 library(changepoint)
 
+# allie's methods
+# https://github.com/alexandralalor/HeatwaveProject/blob/main/scripts/3_analysis/3_analysis_1_Weight.R
+
+# remove NA values from the weight data - already done above
+
+# include only droughted plants
+stress_df <- morph %>% 
+  filter(water == "drought")
+
+# allie's code:
+# for(i in 1:length(SpeciesID)) {
+#   ID <- SpeciesID[i]
+#   Phase1_Data_Weight_filter <- Phase1_Data_Weight %>% 
+#     filter(SpeciesID == ID)
+#   smooth <- smooth.spline(x = Phase1_Data_Weight_filter$Week,
+#                           y = Phase1_Data_Weight_filter$Weight_g)
+#   predict_d2 <- predict(smooth, deriv=2)
+#   stress_week_1 <- as.matrix(uniroot.all(approxfun(predict_d2$x, predict_d2$y),
+#                                          interval = range(predict_d2$x)))
+#   colnames(stress_week_1) <- ID
+#   stress_week <- merge(stress_week, stress_week_1, by = 0, all = T)
+#   stress_week <- stress_week %>% 
+#     select(c(-"Row.names"))
+# }
+
+# create a vector of the individual trees:
+ind <- unique(stress_df$TreeID)
+
+# create empty df to fill with "stress points"
+stress_day <- data.frame(matrix(ncol = 0, nrow = 0))
+
+for(i in 1:length(ind)){
+  ID <- ind[i] # select the individual to fit a curve for
+  
+  weight_id <- stress_df %>%  # filter the data to be only for that individual
+    filter(TreeID == ID) %>% 
+    arrange(day)
+  
+  smoother <- smooth.spline(x = weight_id$day,
+                            y = weight_id$weight) # create a smooth spline for that data
+  
+  predict_d2 <- predict(smoother, deriv = 2)
+  stress_day_1 <- as.matrix(uniroot.all(approxfun(predict_d2$x, predict_d2$y),
+                                                   interval = range(predict_d2$x)))
+  
+  colnames(stress_day_1) <- ID
+  
+  stress_day <- merge(stress_day, stress_day_1, by = 0, all = T) 
+  stress_day <- stress_day %>% 
+    select(-`Row.names`)
+}
+
+stress_day <- gather(stress_day, "TreeID", "day") %>% 
+  filter(!is.na(day)) %>% 
+  arrange(TreeID, day)
+
+ggplot(filter(morph, TreeID == "PIEN28"), aes(x = day))+
+  geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == "PIEN28")$day, 
+                                            filter(morph, TreeID == "PIEN28")$weight),
+                                      deriv = 2,
+                                       data = filter(morph, TreeID == "PIEN28")$day))$y))
+  # geom_line(aes(y = weight), color = "red")
+
+stress_day_min <- stress_day %>% 
+  filter(day > 4) %>%  # can play around with this, filtering, etc.
+  group_by(TreeID) %>% 
+  mutate(day_min = min(day)) %>% 
+  filter(day == day_min) %>% 
+  select(-day_min)
+
+# add metadata
+
+stress <- stress_day_min %>% 
+  inner_join(unique(select(morph, TreeID, spp, id, temp, water)))
+
+ggplot(stress)+
+  geom_histogram(aes(x = day), binwidth = 1)+
+  facet_wrap(~spp)
+
+ggplot(stress)+
+  geom_boxplot(aes(x = log(day), y = spp))
+
+ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
+  # geom_line(aes(color = spp, group = TreeID), alpha = 0.5)+
+  geom_smooth(aes(group = TreeID, color = spp), se = F, alpha = 0.1)+
+  facet_wrap(~spp)+
+  geom_vline(xintercept = 4)
+
 
 
 
@@ -134,6 +224,7 @@ library(changepoint)
 
 
 ###############
+# Diameter analysis #
 morph_sub <- filter(morph, TreeID %in% sub4phys)
 
 ggplot(morph_sub, aes(x = day, y = Diam_mm))+
