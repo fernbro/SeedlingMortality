@@ -1,5 +1,6 @@
 library(tidyverse)
 library(rootSolve) # for derivatives
+library(MuMIn)
 
 start_exp <- yday(as.POSIXct("2025-07-21"))
 water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
@@ -159,7 +160,6 @@ ind <- unique(stress_df$TreeID)
 
 # create empty df to fill with "stress points"
 stress_day <- data.frame(matrix(ncol = 0, nrow = 0))
-
 for(i in 1:length(ind)){
   ID <- ind[i] # select the individual to fit a curve for
   
@@ -169,7 +169,7 @@ for(i in 1:length(ind)){
   
   smoother <- smooth.spline(x = weight_id$day,
                             y = weight_id$weight) # create a smooth spline for that data
-  
+
   predict_d2 <- predict(smoother, deriv = 2)
   stress_day_1 <- as.matrix(uniroot.all(approxfun(predict_d2$x, predict_d2$y),
                                                    interval = range(predict_d2$x)))
@@ -182,28 +182,132 @@ for(i in 1:length(ind)){
 }
 
 stress_day <- gather(stress_day, "TreeID", "day") %>% 
-  filter(!is.na(day)) %>% 
-  arrange(TreeID, day)
+  filter(!is.na(day)) %>% # remove NAs introduced by merging
+  arrange(TreeID, day) %>% 
+  inner_join(unique(select(morph, TreeID, spp, id, temp, water))) # add metadata
 
 ggplot(filter(morph, TreeID == "PIEN28"), aes(x = day))+
   geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == "PIEN28")$day, 
                                             filter(morph, TreeID == "PIEN28")$weight),
                                       deriv = 2,
-                                       data = filter(morph, TreeID == "PIEN28")$day))$y))
+                                      data = filter(morph, TreeID == "PIEN28")$day))$y))
   # geom_line(aes(y = weight), color = "red")
 
-stress_day_min <- stress_day %>% 
-  filter(day > 4) %>%  # can play around with this, filtering, etc.
-  group_by(TreeID) %>% 
-  mutate(day_min = min(day)) %>% 
-  filter(day == day_min) %>% 
-  select(-day_min)
+ggplot(filter(morph, TreeID == "PIPO40"), aes(x = day))+
+  geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == "PIPO40")$day, 
+                                                     filter(morph, TreeID == "PIPO40")$weight),
+                                       deriv = 2,
+                                       data = filter(morph, TreeID == "PIPO40")$day))$y))
 
-# add metadata
+# stress_day_min <- stress_day %>% 
+#   group_by(TreeID) %>% 
+#   mutate(day_min = min(day)) %>% 
+#   filter(day == day_min) %>% 
+#   select(-day_min)
 
-stress <- stress_day_min %>% 
-  inner_join(unique(select(morph, TreeID, spp, id, temp, water)))
+stress_day_pipo <- stress_day %>% 
+  filter(spp == "PIPO") %>% 
+  filter(ifelse())
 
+ID <- "PSME15"
+ggplot(filter(morph, TreeID == ID), aes(x = day))+
+  geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == ID)$day, 
+                                                     filter(morph, TreeID == ID)$weight),
+                                       deriv = 1,
+                                       data = filter(morph, TreeID == ID)$day))$y))+
+  geom_hline(yintercept = -1)+
+  labs(title = "First derivative", x = "Day", y = "Weight change (g/day)")
+
+ggplot(filter(morph, TreeID == ID), aes(x = day))+
+  geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == ID)$day, 
+                                                     filter(morph, TreeID == ID)$weight),
+                                       data = filter(morph, TreeID == ID)$day))$y))+
+  labs(title = "Raw", x = "Day", y = "Weight (g)")
+
+ggplot(filter(morph, TreeID == ID), aes(x = day))+
+  geom_line(aes(y = -data.frame(predict(smooth.spline(filter(morph, TreeID == ID)$day, 
+                                                     filter(morph, TreeID == ID)$weight),
+                                       deriv = 1,
+                                       data = filter(morph, TreeID == ID)$day))$y))+
+  # geom_hline(yintercept = 1)+
+  labs(title = "First derivative", x = "Day", y = "Water use (g/day)")
+
+# Convert mass of water to volume and divide by the area of the opening of the pot
+# for a rough estimate of depth
+
+# 2.5 inch diameter opening  = 31.75 mm radius
+# area of circle = 3166.92 mm^2
+# 1 g of water = 1 mL = 1000 mm^3
+# 1 g of water / day = 0.31 mm / day
+
+# are there any literature values of rates of water loss per day that are "limited"?
+# we are overall looking for a Slowing of water loss -> soil particles holding on, stomatal regulation, limited root uptake
+
+
+# exponential decay regression?
+# see if rates of water loss differ - get "e-folding times" ?
+# from Hamerlynck et al. 2010 in Oecologia
+
+# https://douglas-watson.github.io/post/2018-09_exponential_curve_fitting/
+
+# using SSasymp(): self-starting nls (nonlinear least sq) asymptotic model
+# evaluates initial estimates of parameters needed for nls regression
+
+exp_fit <- nls(weight ~ SSasymp(day, yf, y0, log_alpha), data = filter(morph, water == "drought"))
+summary(exp_fit)
+
+# yf: value to which the response decays
+# y0: value at which the response starts
+# alpha: the rate of decay
+
+# create empty df to fill with alphas
+
+# alpha <- data.frame(matrix(ncol = 0, nrow = 0))
+# for(i in 1:length(ind)){
+#   ID <- ind[i] # select the individual to fit a curve for
+#   
+#   weight_id <- stress_df %>%  # filter the data to be only for that individual
+#     filter(TreeID == ID) %>% 
+#     arrange(day)
+#   
+#   exp_fit <- nls(weight ~ SSasymp(day, yf, y0, log_alpha), data = weight_id)
+#   
+#   
+#   fitted %>% 
+#     unnest(tidied) %>% 
+#     select(sensor, term, estimate) %>% 
+#     spread(term, estimate) %>% 
+#     mutate(alpha = exp(log_alpha))
+#   # predict_d2 <- predict(exp_fit, deriv = 2)
+#   # stress_day_1 <- as.matrix(uniroot.all(approxfun(predict_d2$x, predict_d2$y),
+#   #                                       interval = range(predict_d2$x)))
+#   
+#   # colnames(alpha) <- ID
+#   
+#   stress_day <- merge(stress_day, stress_day_1, by = 0, all = T) 
+#   stress_day <- stress_day %>% 
+#     select(-`Row.names`)
+# }
+
+
+# Fit the data
+fitted <- morph %>% 
+  filter(!is.na(weight), water == "drought") %>% 
+  nest(data = -TreeID) %>%
+  mutate(fitmod = map(data, ~ lm(log(weight) ~ day, data = .))) %>% 
+  mutate(tidied = map(fitmod, tidy)) %>% 
+  mutate(augmented = map(.x = fitmod, ~ augment))
+
+# # Produce a table of fit parameters: y0, yf, alpha
+# fitted %>% 
+#   unnest(tidied) %>% 
+#   select(sensor, term, estimate) %>% 
+#   spread(term, estimate) %>% 
+#   mutate(alpha = exp(log_alpha))
+
+
+
+######################################
 ggplot(stress)+
   geom_histogram(aes(x = day), binwidth = 1)+
   facet_wrap(~spp)
@@ -217,6 +321,19 @@ ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
   facet_wrap(~spp)+
   geom_vline(xintercept = 4)
 
+ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
+  # geom_line(aes(color = spp, group = TreeID), alpha = 0.5)+
+  geom_smooth(aes(group = TreeID, color = spp), se = F, alpha = 0.1)+
+  facet_wrap(~spp)+
+  geom_vline(xintercept = 18)
+
+
+
+
+
+
+
+
 
 
 
@@ -224,7 +341,8 @@ ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
 
 
 ###############
-# Diameter analysis #
+                              # Diameter analysis #
+
 morph_sub <- filter(morph, TreeID %in% sub4phys)
 
 ggplot(morph_sub, aes(x = day, y = Diam_mm))+

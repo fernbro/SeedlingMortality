@@ -20,7 +20,7 @@ con <- bind_rows(con_dat) %>%
          spp = str_sub(TreeID, start = 1, end = 4),
          id = as.numeric(str_sub(TreeID, start = 5, end = 6)),
          con = Conductance_mmol_m2s) %>%  # rounded diameter
-  select(-textdate, -Fv_Fm_light, -VWC_perc) %>% 
+  dplyr::select(-textdate, -Fv_Fm_light, -VWC_perc) %>% 
   mutate(temp = case_when(id < 31 ~ "ambient",
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
@@ -79,7 +79,9 @@ ggplot(con, aes(x = yday(date), y = log(con), group = interaction(spp, temp, wat
   theme_light(base_size = 20)+
   labs(x = "Julian Day", y = "Stomatal conductance (mmol/m2s)")
 
-anova(lm(con ~ spp*day, con))
+anova(lm(con ~ spp + day + temp + water, data = con)) # no significant effects of temperature for whole time..
+anova(lm(con ~ spp + temp + water, 
+         data = filter(con, day >= hw_days[1] & day <= hw_days[2]))) # or for just during the heatwave
 
 ######
 
@@ -119,17 +121,39 @@ ggplot(filter(con_avg), aes(x = factor(week), y = c_mean, color = water))+
   theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Week", y = "Conductance (mmol/m2s)")
 
+# faceted by species x temp:
 ggplot(filter(con), aes(x = day, y = con, color = water))+
   annotate("rect", alpha = 0.5, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 500,
            fill = "orange")+
   geom_point(size = 2, alpha = 0.5)+
   geom_vline(xintercept = 90, color = "gray50")+
-  facet_wrap(~temp + spp, ncol = 4)+
-  geom_smooth(alpha = 0.4, aes(group = interaction(sensor, water), fill = water))+
+  facet_wrap(~temp + spp, ncol = 4, scales = "free_x")+
+  geom_smooth(alpha = 0.4, aes(group = interaction(sensor, water), fill = water), method = "gam",
+              formula = y ~ s(x, bs = "cs", k = 4))+ # set k (# of knots) parameter so you dont get an error for small samples
+              # in this format, the number of knots has to be the same for each group i think
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Day", y = "Conductance (mmol/m2s)", fill = "Water", color = "Water")
+
+
+# only droughted plants faceted by spp:
+ggplot(filter(con, water == "drought"), aes(x = day, y = con, color = temp))+
+  annotate("rect", alpha = 0.5, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 500,
+           fill = "orange")+
+  geom_point(size = 2, alpha = 0.5)+
+  geom_vline(xintercept = 90, color = "gray50")+
+  facet_wrap(~spp, ncol = 4, scales = "free_x")+
+  geom_smooth(alpha = 0.4, aes(group = interaction(sensor, temp), fill = temp), method = "gam",
+              formula = y ~ s(x, bs = "cs", k = 4))+ # set k (# of knots) parameter so you dont get an error for small samples
+  # in this format, the number of knots has to be the same for each group i think
+  theme_light(base_size = 20)+
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  labs(x = "Day", y = "Conductance (mmol/m2s)", fill = "Temp", color = "Temp")
+
+
+
 
 ggplot(filter(con), aes(x = day, y = con, color = water))+
   annotate("rect", alpha = 0.5, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 500,

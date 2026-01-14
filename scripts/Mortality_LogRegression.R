@@ -8,6 +8,9 @@ fl <- read_csv("data/Experiment/Processed/Fluorescence.csv") %>%
          day = case_when(year(date) == 2025 ~ yday(date)-202,
                          year(date) == 2026 ~ 365 - 202 + yday(date)))
 
+# fill in data so that trees "stay dead" (are still indicated as dead, as to preserve the "odds")
+# after they die. want predicted curves to bottom out
+
 dead_trees <- (filter(fl, Fv_Fm_dark < 0.1)) %>% 
   group_by(TreeID) %>%
   unique() %>% 
