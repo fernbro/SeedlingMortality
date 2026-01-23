@@ -44,10 +44,10 @@ morph <- bind_rows(morph_dat) %>%
   filter(!is.na(weight))
 
 morph %>% 
-  dplyr::select(date, day, spp, TreeID, id, temp, water, brown) %>% 
+  dplyr::select(date, week, day, spp, TreeID, id, temp, water, brown) %>% 
   write_csv("data/Experiment/Processed/Ocular_Color.csv")
 
-ggplot(morph, aes(x = day, y = Pot_weight_g))+
+ggplot(morph, aes(x = day, y = weight))+
   # geom_line(alpha = 0.4, aes(group = TreeID, color = water, linetype = temp))+
   geom_point(size = 2, alpha = 0.4, aes(group = TreeID, color = water, shape = temp))+
   #geom_point(aes(shape = spp))+
@@ -63,11 +63,13 @@ ggplot(morph, aes(x = day, y = Pot_weight_g))+
   facet_wrap(~spp)
 
 
-ggplot(morph, aes(x = day, y = Pot_weight_g))+
-  # geom_line(alpha = 0.4, aes(group = TreeID, color = water, linetype = temp))+
-  geom_point(size = 2, alpha = 0.4, aes(group = TreeID, color = water, shape = temp))+
-  geom_smooth(aes(fill = water, linetype = temp,
-                  group = TreeID))+
+ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
+  geom_line(alpha = 0.5, aes(group = TreeID, color = water, linetype = temp))+
+  # geom_point(size = 1, alpha = 0.4, aes(group = TreeID, color = water, shape = temp))+
+  # geom_smooth(aes(fill = water, linetype = temp,
+  #                 group = TreeID), se = F, alpha = 0.2)+
+  # geom_label(data = filter(morph, water == "drought", day == 46), 
+  #            aes(x = day, y = weight, label = TreeID))+
   theme_light(base_size = 20)+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
@@ -87,16 +89,16 @@ ind <- unique(morph$TreeID)
 
 library(mgcv)
 
-models <- morph %>% 
-  tidyr::nest(data = -TreeID) %>% 
-  dplyr::mutate(m = map(data, gam, 
-                        formula = Pot_weight_g ~ day),
-                fitted = map(m, `[[`, "fitted")
-  )
-
-results <- models %>%
-  dplyr::select(-m) %>%
-  tidyr::unnest(cols = c(data,fitted))
+# models <- morph %>% 
+#   tidyr::nest(data = -TreeID) %>% 
+#   dplyr::mutate(m = map(data, smooth.spline, 
+#                         x = weight, y = day),
+#                 fitted = map(m, `[[`, "fitted")
+#   )
+# 
+# results <- models %>%
+#   dplyr::select(-m) %>%
+#   tidyr::unnest(cols = c(data,fitted))
 
 # check this post:
 # https://stackoverflow.com/questions/79181587/using-map-with-gam-model
@@ -178,22 +180,74 @@ for(i in 1:length(ind)){
   
   stress_day <- merge(stress_day, stress_day_1, by = 0, all = T) 
   stress_day <- stress_day %>% 
-    select(-`Row.names`)
+    dplyr::select(-`Row.names`)
 }
 
-stress_day <- gather(stress_day, "TreeID", "day") %>% 
-  filter(!is.na(day)) %>% # remove NAs introduced by merging
-  arrange(TreeID, day) %>% 
-  inner_join(unique(select(morph, TreeID, spp, id, temp, water))) # add metadata
+# for maximum of second derivative?
+for(i in 1:length(ind)){
+  ID <- ind[i] # select the individual to fit a curve for
+  
+  weight_id <- stress_df %>%  # filter the data to be only for that individual
+    filter(TreeID == ID) %>% 
+    arrange(day)
+  
+  smoother <- smooth.spline(x = weight_id$day,
+                            y = weight_id$weight) # create a smooth spline for that data
+  
+  predict_d2 <- predict(smoother, deriv = 2, newdata = data.frame(day = seq(from = 1, to = max(weight_id$day), by = 1)))
+  stress_day_1 <- data.frame(predict_d2$x[which(predict_d2$y == max(predict_d2$y))]+1)
+    # change to which is max ..? 
+  
+  #predict_d2[which(predict_d2==max(predict_d2))] ? 
+  
+  colnames(stress_day_1) <- ID
+  
+  stress_day <- merge(stress_day, stress_day_1, by = 0, all = T) 
+  stress_day <- stress_day %>% 
+    dplyr::select(-`Row.names`)
+}
 
-ggplot(filter(morph, TreeID == "PIEN28"), aes(x = day))+
+stress_days <- gather(stress_day, "TreeID", "day") %>% 
+  filter(!is.na(day)) %>% # remove NAs introduced by merging
+  inner_join(unique(dplyr::select(morph, TreeID, spp, id, temp, water))) # add metadata
+
+
+ggplot(stress_days, aes(x = day, y = spp))+
+  geom_boxplot()
+
+ggplot()+
+  geom_line(data = filter(morph, water == "drought"), aes(x = day, y = weight, group = TreeID, color = id))+
+  geom_vline(data = filter(stress_days, water == "drought"), aes(xintercept = day, group = TreeID))+
+  facet_wrap(~spp)+
+  theme_minimal(base_size = 20)+
+  theme(legend.position = "none")
+
+
+# average limitation for each spp:
+
+stress_avg <- stress_days %>% 
+  filter(water == "drought") %>% 
+  group_by(spp, temp) %>% 
+  summarise(day = median(day))
+
+ggplot()+
+  geom_line(data = filter(morph, water == "drought"), aes(x = day, y = weight, group = TreeID, color = id))+
+  geom_vline(data = stress_avg, aes(xintercept = day, linetype = temp))+
+  scale_color_continuous(guide = "none")+
+  facet_wrap(~spp)+
+  theme_minimal(base_size = 20)
+
+
+# other stuff.....
+
+ggplot(filter(morph, TreeID == "PIEN10"), aes(x = day))+
   geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == "PIEN28")$day, 
                                             filter(morph, TreeID == "PIEN28")$weight),
                                       deriv = 2,
                                       data = filter(morph, TreeID == "PIEN28")$day))$y))
   # geom_line(aes(y = weight), color = "red")
 
-ggplot(filter(morph, TreeID == "PIPO40"), aes(x = day))+
+ggplot(filter(morph, TreeID == "PIEN10"), aes(x = day))+
   geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == "PIPO40")$day, 
                                                      filter(morph, TreeID == "PIPO40")$weight),
                                        deriv = 2,
@@ -205,17 +259,14 @@ ggplot(filter(morph, TreeID == "PIPO40"), aes(x = day))+
 #   filter(day == day_min) %>% 
 #   select(-day_min)
 
-stress_day_pipo <- stress_day %>% 
-  filter(spp == "PIPO") %>% 
-  filter(ifelse())
 
-ID <- "PSME15"
+ID <- "PSME7"
 ggplot(filter(morph, TreeID == ID), aes(x = day))+
   geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == ID)$day, 
                                                      filter(morph, TreeID == ID)$weight),
-                                       deriv = 1,
+                                       deriv = 2,
                                        data = filter(morph, TreeID == ID)$day))$y))+
-  geom_hline(yintercept = -1)+
+  # geom_hline(yintercept = -1)+
   labs(title = "First derivative", x = "Day", y = "Weight change (g/day)")
 
 ggplot(filter(morph, TreeID == ID), aes(x = day))+
@@ -313,7 +364,7 @@ ggplot(stress)+
   facet_wrap(~spp)
 
 ggplot(stress)+
-  geom_boxplot(aes(x = log(day), y = spp))
+  geom_boxplot(aes(x = (day), y = spp))
 
 ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
   # geom_line(aes(color = spp, group = TreeID), alpha = 0.5)+

@@ -20,6 +20,45 @@ ggplot(brown, aes(x = day, y = brown))+
   facet_wrap(~water+temp)+
   labs(x = "Day", y = "% of foliage brown", color = "Species")
 
+brown_sum <- brown %>% 
+  group_by(spp, brown, water, temp, day) %>% 
+  summarise(total = n())
+
+ggplot(filter(brown_sum, water == "drought"), aes(x = day, y = brown))+
+  # geom_line(aes(color = spp), alpha = 0.6)+
+  geom_point(aes(color = temp, size = total), alpha = 0.6)+
+  # geom_smooth(aes(group = spp))+
+  theme_minimal(base_size = 20)+
+  facet_wrap(~spp)+
+  labs(x = "Day", y = "% of foliage brown", color = "Species")
+
+# fl-brown comparison:
+
+br_sub <- brown %>% 
+  dplyr::select(spp, TreeID, id, temp, water, brown, week)
+
+fl_sub <- fl %>% 
+  dplyr::select(spp, TreeID, id, temp, water, Fv_Fm_dark, week)
+  
+fl_br <- inner_join(fl_sub, br_sub) %>% 
+  filter(!is.na(brown), !is.na(Fv_Fm_dark))
+
+ggplot(filter(fl_br, water == "drought"), aes(x = brown, y = Fv_Fm_dark))+
+  geom_bin_2d(bins = 50)+
+  facet_wrap(~spp)+
+  theme_minimal()
+
+ggplot(filter(fl_br, water == "drought"), aes(x = as.factor(brown), y = Fv_Fm_dark))+
+  geom_boxplot()+
+  theme_minimal()+
+  facet_wrap(~spp)
+
+ggplot(filter(fl_br, water == "drought"), aes(x = as.factor(brown), y = Fv_Fm_dark))+
+  geom_boxplot(aes(fill = spp))+
+  theme_minimal(base_size = 20)
+
+
+
 # Time of death from fl:
 
 fl_death <- (filter(fl, Fv_Fm_dark < 0.1)) %>% 

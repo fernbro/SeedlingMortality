@@ -66,27 +66,26 @@ ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
   # theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Day", y = "Fv/Fm", shape = "Temp", linetype = "Temp", color = "Water", fill = "Water")+
   theme(panel.background = element_rect(fill = 'white'), plot.background = element_rect(fill = 'white'))
-ggsave("figures/FvFm01122026.png", width = 10, height = 10, units = "in")
+# ggsave("figures/FvFm01122026.png", width = 10, height = 10, units = "in")
 
 
 # new aesthetics:
-ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
+ggplot(filter(fluor, water == "drought"), aes(x = day, y = Fv_Fm_dark, group = spp))+
   geom_hline(yintercept = 0.1, color = "red", linewidth = 1.5, alpha = 0.1)+
   geom_line(alpha = 0.3, aes(group = TreeID, linetype = temp, color = temp))+
-  geom_point(aes(shape = water,
-                 fill = temp,
+  geom_point(aes(shape = temp,
                  color = temp), 
              # color = "black",
              alpha = 0.7)+
-  facet_wrap(~spp+water, ncol = 2)+
-  scale_fill_manual(values = hw_colors, guide = T)+
+  facet_wrap(~spp, ncol = 1)+
+  # scale_fill_manual(values = hw_colors, guide = T)+
   scale_color_manual(values = hw_colors)+
-  scale_shape_manual(values=c(22, 1))+
+  scale_shape_manual(values=c(16, 15))+
   theme_minimal(base_size = 20)+
   guides(fill = guide_legend(override.aes = list(shape = c(22,21))))+
   labs(x = "Day", y = "Fv/Fm", 
-       shape = "Water", 
+       shape = "Temp", 
        linetype = "Temp",
-       fill = "Temp")+
+       color = "Temp")+
   theme(panel.background = element_rect(fill = 'white'), plot.background = element_rect(fill = 'white'))
 # ggsave("figures/FvFm01122026_WaterTreatments.png", width = 10, height = 10, units = "in")

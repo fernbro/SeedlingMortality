@@ -3,12 +3,16 @@ library(emmeans)
 library(drc)
 
 start_exp <- yday(as.POSIXct("2025-07-21"))
+fl <- read_csv("data/Experiment/Processed/Fluorescence.csv") %>% 
+  mutate(date = date(date), 
+         day = case_when(year(date) == 2025 ~ yday(date)-202,
+                         year(date) == 2026 ~ 365 - 202 + yday(date)))
 
-col_dates <- fl %>% # find dates on which color was observed
+fl_dates <- fl %>% 
   filter(water == "drought") %>% 
   dplyr::select(day) %>% 
   unique() # 24 dates of observation
-trees <- fl %>% # find all trees for which color was observed # change df from fl to morph data?
+trees <- fl %>% 
   filter(water == "drought") %>% 
   dplyr::select(TreeID) %>% 
   unique() # 40 trees
@@ -120,7 +124,7 @@ ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
 # which day does pred = 50 for each spp, treatment?
 # LD50 of days of drought:
 
-ED(drm(mort_glm))
+# ED(drm(mort_glm))
 
 get_LD50 = function(fit){
   data.frame(

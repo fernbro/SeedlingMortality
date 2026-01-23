@@ -161,7 +161,8 @@ ggplot(filter(con), aes(x = day, y = con, color = water))+
   geom_point(size = 2, alpha = 0.5)+
   geom_vline(xintercept = 90, color = "gray50")+
   facet_wrap(~temp + spp, ncol = 4)+
-  geom_smooth(alpha = 0.4, aes(group = interaction(water, sensor), fill = water))+
+  geom_smooth(alpha = 0.4, aes(group = interaction(sensor, water, temp), fill = water), method = "gam",
+              formula = y ~ s(x, bs = "cs", k = 4))+
   theme_minimal(base_size = 20)+
   labs(x = "Day", y = "Conductance (mmol/m2s)", fill = "Water", color = "Water")
 

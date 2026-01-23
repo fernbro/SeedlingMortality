@@ -19,12 +19,12 @@ renameFunction <- function(x,someNames){
 
 kdat <- lapply(kest, read_csv, skip = 3) %>% 
   lapply(filter, `Data Type` == "point") %>% 
-  lapply(select, `FORMATTED DATE_TIME`, `Temperature`, `Relative Humidity`) %>% 
+  lapply(dplyr::select, `FORMATTED DATE_TIME`, `Temperature`, `Relative Humidity`) %>% 
   lapply(renameFunction) %>%
   lapply(mutate, year = year(datetime), datetime = ymd_hms(datetime, tz = "America/Phoenix"),
          temp = as.numeric(temp), rh = as.numeric(rh)) %>% 
   lapply(filter, year >= 2025) %>%
-  lapply(select, -year)
+  lapply(dplyr::select, -year)
 
 
 #name the list elements using the file names:
@@ -66,7 +66,8 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
          chamber = factor(chamber)) %>% 
   mutate(vpd = calc_vpd(temp, rh)) %>% 
   filter(datetime >= as.POSIXct("2025-07-21")) %>% 
-  mutate(day = yday(datetime)-202)
+  mutate(day = case_when(year(datetime) == 2025 ~ yday(datetime)-202,
+                         year(datetime) == 2026 ~ 365 - 202 + yday(datetime)))
 
 
 # chamber_wide <- chamber_data %>% 
@@ -88,6 +89,34 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
 #                          .default = temp)) %>% 
 #   mutate(doy = yday(datetime))
 
+# calculate some daily avgs
+
+daily_avgs <- chamber_data %>% 
+  group_by(kest, chamber, set, day) %>% 
+  summarise(temp = mean(temp, na.rm = T), 
+            rh = mean(rh, na.rm = T),
+            vpd = mean(vpd, na.rm = T))
+
+daily_ch <- chamber_data %>% 
+  group_by(chamber, set, day) %>% 
+  summarise(temp = mean(temp, na.rm = T), 
+            rh = mean(rh, na.rm = T),
+            vpd = mean(vpd, na.rm = T))
+  
+# write_csv(daily_ch, "data/Experiment/Processed/Kestrel_Dailys_ChamberAvg.csv")
+# write_csv(daily_avgs, "data/Experiment/Processed/Kestrel_Dailys.csv")
+
+ggplot(daily_avgs, aes(x = day, y = rh))+
+  geom_line(aes(color = chamber, group = kest))+
+  theme_light(base_size = 16)+
+  labs(x = "Day", y = "Daily mean chamber RH (%)", color = "Chamber")
+ggsave("figures/Daily_RH.png", width = 6, height = 5, units = "in")
+
+ggplot(daily_avgs, aes(x = day, y = vpd))+
+  geom_line(aes(color = chamber, group = kest))+
+  theme_light(base_size = 16)+
+  labs(x = "Day", y = "Daily mean chamber VPD (kPa)", color = "Chamber")
+ggsave("figures/Daily_VPD.png", width = 6, height = 5, units = "in")
 
 ggplot(filter(chamber_data), aes(x = day, y = temp))+
   geom_line(aes(linetype = chamber, color = kest))+
