@@ -91,6 +91,14 @@ trees_dates$ci_hi <- upper
 
 trees_dates$spp <- factor(trees_dates$spp, levels = c("PSME", "PIPO", "PIEN", "PIFL"))
 
+# read in stress days:
+stress_days <- read_csv("data/Experiment/Processed/Water_Limitation_Days.csv")
+stress_means <- stress_days %>% 
+  group_by(spp, temp) %>% 
+  summarise(mean_lim = mean(cpt), med_lim = median(cpt))
+stress_means$spp <- factor(stress_means$spp, levels = c("PSME", "PIPO", "PIEN", "PIFL"))
+
+
 ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
   # geom_point(aes(color = temp, shape = temp), alpha = 0.3)+
   # scale_shape_manual(values = c(21,2))+
@@ -103,6 +111,8 @@ ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
   geom_ribbon(alpha = 0.2, aes(fill = temp, linetype = temp,
                 group = interaction(temp, water),
                 x = day, ymin = ci_lo*100, ymax = ci_hi*100))+
+  geom_vline(data = stress_means, aes(xintercept = mean_lim,
+                                      color = temp))+
   facet_wrap(~spp, ncol = 1)+
   theme_minimal(base_size = 15)+
   labs(x = "Days of drought", y = "% survival")

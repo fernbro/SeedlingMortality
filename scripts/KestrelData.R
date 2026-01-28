@@ -65,9 +65,18 @@ chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
                          .default = "high elevation"),
          chamber = factor(chamber)) %>% 
   mutate(vpd = calc_vpd(temp, rh)) %>% 
-  filter(datetime >= as.POSIXct("2025-07-21")) %>% 
+  filter(datetime >= as.POSIXct("2025-07-16")) %>% 
   mutate(day = case_when(year(datetime) == 2025 ~ yday(datetime)-202,
                          year(datetime) == 2026 ~ 365 - 202 + yday(datetime)))
+
+chamber_pre <- chamber_data %>% 
+  filter(day < 0) %>% 
+  group_by(chamber) %>% 
+  summarise(tmean = mean(temp))
+
+ggplot(chamber_pre, aes(x = datetime, y = temp))
+  geom_line(aes(group = kest))+
+  # facet_wrap(~set)
 
 
 # chamber_wide <- chamber_data %>% 
@@ -110,7 +119,7 @@ ggplot(daily_avgs, aes(x = day, y = rh))+
   geom_line(aes(color = chamber, group = kest))+
   theme_light(base_size = 16)+
   labs(x = "Day", y = "Daily mean chamber RH (%)", color = "Chamber")
-ggsave("figures/Daily_RH.png", width = 6, height = 5, units = "in")
+# ggsave("figures/Daily_RH.png", width = 6, height = 5, units = "in")
 
 ggplot(daily_avgs, aes(x = day, y = vpd))+
   geom_line(aes(color = chamber, group = kest))+

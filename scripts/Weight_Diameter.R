@@ -43,6 +43,8 @@ morph <- bind_rows(morph_dat) %>%
   full_join(weeks) %>% 
   filter(!is.na(weight))
 
+write_csv(morph, "data/Experiment/Processed/Weight_Diam_Color.csv")
+
 morph %>% 
   dplyr::select(date, week, day, spp, TreeID, id, temp, water, brown) %>% 
   write_csv("data/Experiment/Processed/Ocular_Color.csv")
@@ -62,7 +64,7 @@ ggplot(morph, aes(x = day, y = weight))+
        linetype = "Temperature", shape = "Temperature")+
   facet_wrap(~spp)
 
-
+hw_days <- c(19,25)
 ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
   geom_line(alpha = 0.5, aes(group = TreeID, color = water, linetype = temp))+
   # geom_point(size = 1, alpha = 0.4, aes(group = TreeID, color = water, shape = temp))+
@@ -71,6 +73,8 @@ ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
   # geom_label(data = filter(morph, water == "drought", day == 46), 
   #            aes(x = day, y = weight, label = TreeID))+
   theme_light(base_size = 20)+
+  annotate("rect", alpha = 0.3, xmin = hw_days[1], xmax = hw_days[2], ymin = 200, ymax = 500,
+           fill = "orange")+
   theme(strip.background = element_rect(color = "black", fill = "white"))+
   theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Day", y = "Weight (g) ", color = "Water", fill = "Water", 
@@ -87,7 +91,7 @@ ind <- unique(morph$TreeID)
 
 # actually probably want to fit a GAM
 
-library(mgcv)
+# library(mgcv)
 
 # models <- morph %>% 
 #   tidyr::nest(data = -TreeID) %>% 
@@ -113,24 +117,24 @@ library(mgcv)
 
 #https://stats.stackexchange.com/questions/76959/finding-inflection-points-in-r-from-smoothed-data#:~:text=To%20find%20inflection%20points%20in%20smoothed%20data,dependent%20on%20the%20smoothing%20function%20you%20use.
 
-results <- results %>% 
-  arrange(day) %>% 
-  group_by(TreeID) %>% 
-  mutate(infl = case_when(diff(diff(fitted)) == 0 ~ T,
-                          .default = F))
-
-infl <- c(FALSE, diff(diff(results$fitted)>0)!=0)
-
-# let's try the inflection package:
-
-library(inflection)
+# results <- results %>% 
+#   arrange(day) %>% 
+#   group_by(TreeID) %>% 
+#   mutate(infl = case_when(diff(diff(fitted)) == 0 ~ T,
+#                           .default = F))
+# 
+# infl <- c(FALSE, diff(diff(results$fitted)>0)!=0)
+# 
+# # let's try the inflection package:
+# 
+# library(inflection)
 
 
 
 
 # changepoint analysis?
 # install.packages("changepoint")
-library(changepoint)
+# library(changepoint)
 
 # allie's methods
 # https://github.com/alexandralalor/HeatwaveProject/blob/main/scripts/3_analysis/3_analysis_1_Weight.R
@@ -162,6 +166,8 @@ ind <- unique(stress_df$TreeID)
 
 # create empty df to fill with "stress points"
 stress_day <- data.frame(matrix(ncol = 0, nrow = 0))
+
+# solves for root of second derivative: 
 for(i in 1:length(ind)){
   ID <- ind[i] # select the individual to fit a curve for
   
@@ -183,7 +189,8 @@ for(i in 1:length(ind)){
     dplyr::select(-`Row.names`)
 }
 
-# for maximum of second derivative?
+# solves for maximum of second derivative:
+stress_day <- data.frame(matrix(ncol = 0, nrow = 0))
 for(i in 1:length(ind)){
   ID <- ind[i] # select the individual to fit a curve for
   
@@ -194,11 +201,12 @@ for(i in 1:length(ind)){
   smoother <- smooth.spline(x = weight_id$day,
                             y = weight_id$weight) # create a smooth spline for that data
   
-  predict_d2 <- predict(smoother, deriv = 2, newdata = data.frame(day = seq(from = 1, to = max(weight_id$day), by = 1)))
+  predict_d2 <- predict(smoother, deriv = 2, 
+                        newdata = data.frame(day = seq(from = 1, to = max(weight_id$day), by = 1)))
   stress_day_1 <- data.frame(predict_d2$x[which(predict_d2$y == max(predict_d2$y))]+1)
     # change to which is max ..? 
   
-  #predict_d2[which(predict_d2==max(predict_d2))] ? 
+  # predict_d2[which(predict_d2==max(predict_d2))]
   
   colnames(stress_day_1) <- ID
   
@@ -209,11 +217,13 @@ for(i in 1:length(ind)){
 
 stress_days <- gather(stress_day, "TreeID", "day") %>% 
   filter(!is.na(day)) %>% # remove NAs introduced by merging
-  inner_join(unique(dplyr::select(morph, TreeID, spp, id, temp, water))) # add metadata
+  inner_join(unique(dplyr::select(morph, TreeID, spp, id, temp, water))) %>% # add metadata
+  group_by(TreeID) %>% 
+  filter(day == min(day))
 
 
-ggplot(stress_days, aes(x = day, y = spp))+
-  geom_boxplot()
+ggplot(stress_days, aes(x = spp, y = day))+
+  geom_boxplot(aes(fill = temp))
 
 ggplot()+
   geom_line(data = filter(morph, water == "drought"), aes(x = day, y = weight, group = TreeID, color = id))+
@@ -237,37 +247,16 @@ ggplot()+
   facet_wrap(~spp)+
   theme_minimal(base_size = 20)
 
+# check derivs and such
 
-# other stuff.....
-
-ggplot(filter(morph, TreeID == "PIEN10"), aes(x = day))+
-  geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == "PIEN28")$day, 
-                                            filter(morph, TreeID == "PIEN28")$weight),
-                                      deriv = 2,
-                                      data = filter(morph, TreeID == "PIEN28")$day))$y))
-  # geom_line(aes(y = weight), color = "red")
-
-ggplot(filter(morph, TreeID == "PIEN10"), aes(x = day))+
-  geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == "PIPO40")$day, 
-                                                     filter(morph, TreeID == "PIPO40")$weight),
-                                       deriv = 2,
-                                       data = filter(morph, TreeID == "PIPO40")$day))$y))
-
-# stress_day_min <- stress_day %>% 
-#   group_by(TreeID) %>% 
-#   mutate(day_min = min(day)) %>% 
-#   filter(day == day_min) %>% 
-#   select(-day_min)
-
-
-ID <- "PSME7"
+ID <- "PIFL10"
 ggplot(filter(morph, TreeID == ID), aes(x = day))+
   geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == ID)$day, 
                                                      filter(morph, TreeID == ID)$weight),
                                        deriv = 2,
                                        data = filter(morph, TreeID == ID)$day))$y))+
   # geom_hline(yintercept = -1)+
-  labs(title = "First derivative", x = "Day", y = "Weight change (g/day)")
+  labs(title = "Second derivative", x = "Day", y = "Weight change (g/day)")
 
 ggplot(filter(morph, TreeID == ID), aes(x = day))+
   geom_line(aes(y = data.frame(predict(smooth.spline(filter(morph, TreeID == ID)$day, 
@@ -282,80 +271,6 @@ ggplot(filter(morph, TreeID == ID), aes(x = day))+
                                        data = filter(morph, TreeID == ID)$day))$y))+
   # geom_hline(yintercept = 1)+
   labs(title = "First derivative", x = "Day", y = "Water use (g/day)")
-
-# Convert mass of water to volume and divide by the area of the opening of the pot
-# for a rough estimate of depth
-
-# 2.5 inch diameter opening  = 31.75 mm radius
-# area of circle = 3166.92 mm^2
-# 1 g of water = 1 mL = 1000 mm^3
-# 1 g of water / day = 0.31 mm / day
-
-# are there any literature values of rates of water loss per day that are "limited"?
-# we are overall looking for a Slowing of water loss -> soil particles holding on, stomatal regulation, limited root uptake
-
-
-# exponential decay regression?
-# see if rates of water loss differ - get "e-folding times" ?
-# from Hamerlynck et al. 2010 in Oecologia
-
-# https://douglas-watson.github.io/post/2018-09_exponential_curve_fitting/
-
-# using SSasymp(): self-starting nls (nonlinear least sq) asymptotic model
-# evaluates initial estimates of parameters needed for nls regression
-
-exp_fit <- nls(weight ~ SSasymp(day, yf, y0, log_alpha), data = filter(morph, water == "drought"))
-summary(exp_fit)
-
-# yf: value to which the response decays
-# y0: value at which the response starts
-# alpha: the rate of decay
-
-# create empty df to fill with alphas
-
-# alpha <- data.frame(matrix(ncol = 0, nrow = 0))
-# for(i in 1:length(ind)){
-#   ID <- ind[i] # select the individual to fit a curve for
-#   
-#   weight_id <- stress_df %>%  # filter the data to be only for that individual
-#     filter(TreeID == ID) %>% 
-#     arrange(day)
-#   
-#   exp_fit <- nls(weight ~ SSasymp(day, yf, y0, log_alpha), data = weight_id)
-#   
-#   
-#   fitted %>% 
-#     unnest(tidied) %>% 
-#     select(sensor, term, estimate) %>% 
-#     spread(term, estimate) %>% 
-#     mutate(alpha = exp(log_alpha))
-#   # predict_d2 <- predict(exp_fit, deriv = 2)
-#   # stress_day_1 <- as.matrix(uniroot.all(approxfun(predict_d2$x, predict_d2$y),
-#   #                                       interval = range(predict_d2$x)))
-#   
-#   # colnames(alpha) <- ID
-#   
-#   stress_day <- merge(stress_day, stress_day_1, by = 0, all = T) 
-#   stress_day <- stress_day %>% 
-#     select(-`Row.names`)
-# }
-
-
-# Fit the data
-fitted <- morph %>% 
-  filter(!is.na(weight), water == "drought") %>% 
-  nest(data = -TreeID) %>%
-  mutate(fitmod = map(data, ~ lm(log(weight) ~ day, data = .))) %>% 
-  mutate(tidied = map(fitmod, tidy)) %>% 
-  mutate(augmented = map(.x = fitmod, ~ augment))
-
-# # Produce a table of fit parameters: y0, yf, alpha
-# fitted %>% 
-#   unnest(tidied) %>% 
-#   select(sensor, term, estimate) %>% 
-#   spread(term, estimate) %>% 
-#   mutate(alpha = exp(log_alpha))
-
 
 
 ######################################
@@ -373,8 +288,10 @@ ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
   geom_vline(xintercept = 4)
 
 ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
-  # geom_line(aes(color = spp, group = TreeID), alpha = 0.5)+
-  geom_smooth(aes(group = TreeID, color = spp), se = F, alpha = 0.1)+
+  geom_line(aes(color = spp, group = TreeID), alpha = 0.5)+
+  annotate("rect", alpha = 0.3, xmin = hw_days[1], xmax = hw_days[2], ymin = 200, ymax = 500,
+           fill = "orange")+
+  # geom_smooth(aes(group = TreeID, color = spp), se = F, alpha = 0.1)+
   facet_wrap(~spp)+
   geom_vline(xintercept = 18)
 
@@ -396,7 +313,7 @@ ggplot(filter(morph, water == "drought"), aes(x = day, y = weight))+
 
 morph_sub <- filter(morph, TreeID %in% sub4phys)
 
-ggplot(morph_sub, aes(x = day, y = Diam_mm))+
+ggplot(morph_sub, aes(x = day, y = diam_mm))+
   # geom_boxplot(alpha = 0.3, aes(group = interaction(date, spp), fill = spp))+
   # geom_point()+
   geom_boxplot(aes(group = interaction(water, day)))+
@@ -405,16 +322,19 @@ ggplot(morph_sub, aes(x = day, y = Diam_mm))+
   theme_minimal(base_size = 20)+
   labs(x = "Day", y = "Stem diameter (mm)", fill = "Water")
 
-ggplot(morph, aes(x = week, y = Diam_mm))+
+ggplot(filter(morph, day < 30), aes(x = day, y = diam_mm))+
   # geom_smooth(method = "lm", aes(fill = water))+
   # geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
-  geom_line(aes(group = TreeID), alpha = 0.4)+
-  facet_wrap(~interaction(water, spp), nrow = 4)+
+  # geom_line(aes(group = TreeID, color = water), alpha = 0.4)+
+  geom_smooth(aes(color = water, fill = water, group = interaction(water, spp)), method = "lm")+
+  facet_wrap(~(spp), nrow = 4)+
+  scale_color_manual(values=c("red","blue"))
+  xlim(c(0, 28))+
   theme_light()+
   labs(x = "Date", y = "Stem diameter (mm) ", shape = "Species")
 
 ggplot(filter(morph, date %in% c(as.POSIXct("2025-07-23"), as.POSIXct("2025-07-24"))), 
-       aes(x = spp, y = Diam_mm))+
+       aes(x = spp, y = diam_mm))+
   geom_boxplot(aes(group = interaction(spp, water, temp), fill = water))+
   facet_wrap(~temp)+
   theme_light()
@@ -425,7 +345,7 @@ ggplot(filter(morph, date %in% c(as.POSIXct("2025-07-23"), as.POSIXct("2025-07-2
   facet_wrap(~temp)+
   theme_light()
 
-ggplot(morph, aes(x = week, y = Diam_mm))+
+ggplot(morph, aes(x = week, y = diam_mm))+
   geom_line(aes(group = TreeID), alpha = 0.4)+
   geom_smooth(method = "lm", aes(group = spp))+
   # geom_boxplot(aes(group = interaction(date, spp), fill = spp))+
@@ -435,11 +355,11 @@ ggplot(morph, aes(x = week, y = Diam_mm))+
 
 morph_stats <- morph %>% 
   group_by(TreeID) %>% 
-  summarise(max_weight = max(Pot_weight_g))
+  summarise(max_weight = max(weight))
 
 morph <- morph %>% 
   full_join(morph_stats) %>% 
-  mutate(weight_frac = Pot_weight_g/max_weight)
+  mutate(weight_frac = weight/max_weight)
 
 # write_csv()
 
@@ -459,13 +379,13 @@ soil_comp <- inner_join(soil, morph, by = join_by(date, TreeID, spp, water, temp
 
 comp_stats <- soil_comp %>% 
   group_by(TreeID) %>%
-  summarise(max_weight = max(Pot_weight_g),
+  summarise(max_weight = max(weight),
             max_vwc = max(VWC_perc))
 
 
 soil_comp2 <- soil_comp %>% 
   full_join(comp_stats) %>% 
-  mutate(weight_frac = Pot_weight_g/max_weight,
+  mutate(weight_frac = weight/max_weight,
          vwc_frac = VWC_perc/max_vwc)
   
 cor.test(soil_comp2$weight_frac, soil_comp2$vwc_frac)
@@ -476,10 +396,21 @@ cor.test(soil_comp2$weight_frac, soil_comp2$vwc_frac)
 ggplot(filter(soil_comp2, water == "drought"), 
        aes(x = weight_frac, y = vwc_frac))+
   geom_smooth(aes(color = spp), se = T, method = "lm")+
+  geom_point()+
   # geom_path(aes(group = TreeID), lineend = "square")+
   # geom_smooth(method = "lm", se = T, aes(linetype = temp, group = spp))+
   # facet_wrap(~interaction(temp, el_group))+
   labs(x = "% of max weight", y = "% of max VWC")+
+  theme_light(base_size = 24)
+
+ggplot(filter(soil_comp2, water == "drought"), 
+       aes(x = weight, y = VWC_perc))+
+  geom_smooth(se = T, method = "lm")+
+  geom_point()+
+  # geom_path(aes(group = TreeID), lineend = "square")+
+  # geom_smooth(method = "lm", se = T, aes(linetype = temp, group = spp))+
+  # facet_wrap(~interaction(temp, el_group))+
+  labs(x = "Weight", y = "VWC")+
   theme_light(base_size = 24)
 
 # mean(filter(soil_comp2, 
@@ -509,7 +440,7 @@ soil_avgs <- filter(soil_comp2,
 
 # by VWC and mass:
 ggplot(filter(soil_comp2), 
-       aes(x = Pot_weight_g, y = VWC_perc))+
+       aes(x = weight, y = VWC_perc))+
   geom_point(aes(color = spp))+
   # geom_path(aes(group = TreeID), lineend = "square")+
   geom_smooth(method = "lm", se = F, aes(linetype = temp))+
@@ -518,7 +449,7 @@ ggplot(filter(soil_comp2),
   theme_light(base_size = 24)
 # ggsave("figures/VWC_v_weight.png", last_plot(), width = 8, height = 6)
 
-cor.test(soil_comp2$Pot_weight_g, soil_comp2$VWC_perc)
+cor.test(soil_comp2$weight, soil_comp2$VWC_perc)
 
 ggplot(filter(soil_comp2, temp == "heatwave" & water == "drought"), 
        aes(x = water, y = vwc_frac, fill = spp))+
@@ -540,9 +471,9 @@ ggplot(filter(morph, date >= "2025-08-01" & water == "drought"),
 
 ##################
 
-cor.test(soil_comp$VWC_perc, soil_comp$Pot_weight_g)
+cor.test(soil_comp$VWC_perc, soil_comp$weight)
 
-ggplot(soil_comp, aes(x = Pot_weight_g, y = VWC_perc))+
+ggplot(soil_comp, aes(x = weight, y = VWC_perc))+
   geom_point(aes(color = spp))+
  # geom_path(aes(group = TreeID), lineend = "square")+
   geom_smooth(method = "lm")+

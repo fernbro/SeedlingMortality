@@ -28,7 +28,8 @@ vwc <- bind_rows(vwc_dat) %>%
                            .default = "drought")) %>% 
   dplyr::select(-textdate) %>% 
   data.frame() %>% 
-  mutate(day = yday(date)-202)
+  mutate(day = case_when(year(date) == 2025 ~ yday(date)-202,
+                         year(date) == 2026 ~ 365 - 202 + yday(date)))
 
 vwc_sum <- vwc %>% 
   dplyr::group_by(spp, water, temp, date, day) %>% 
@@ -63,7 +64,7 @@ ggplot(vwc, aes(x = day, y = VWC_perc))+
   # theme(strip.text = element_text(colour = 'black'))+
   labs(x = "Day", y = "Soil moisture (%)", color = "Water", shape = "Temp", linetype = "Temp")
 
-ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
+ggplot(filter(vwc, water == "water"), aes(x = day, y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
   # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
   # geom_point(aes(shape = spp))+
@@ -73,7 +74,7 @@ ggplot(filter(vwc, water == "water"), aes(x = yday(date), y = VWC_perc))+
   labs(x = "Julian day", y = "Soil moisture (%)", shape = "Species", linetype = "Species", fill = "Species")
 # ggsave("figures/VWC_v_time.jpg", last_plot(), width = 8, height = 5)
 
-ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
+ggplot(filter(vwc, water == "drought"), aes(x = day, y = VWC_perc))+
   # geom_line(alpha = 0.4, aes(group = TreeID))+
   # geom_smooth(aes(linetype = spp, fill = spp), method = "lm")+
   geom_point(pch = 1, alpha = 0.2)+ 
@@ -85,7 +86,7 @@ ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
 #ggsave("figures/VWC_v_time_preHW.jpg", last_plot(), width = 8, height = 5)
 
 
-ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
+ggplot(filter(vwc, water == "drought"), aes(x = day, y = VWC_perc))+
   geom_line(alpha = 0.4, aes(linetype = temp, color = temp, group = TreeID))+
   # geom_smooth(method = "lm", aes(fill = temp, group = TreeID), se = F)+
   # geom_boxplot(aes(group = yday(date)))+
@@ -98,7 +99,7 @@ ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
   labs(x = "DOY", y = "Soil moisture (%)", linetype = "Species", fill = "Species")
 #ggsave("figures/VWC_Box_preHW.jpg", last_plot(), width = 8, height = 5)
 
-ggplot(filter(vwc, water == "drought"), aes(x = yday(date), y = VWC_perc))+
+ggplot(filter(vwc, water == "drought"), aes(x = day, y = VWC_perc))+
   geom_line(alpha = 0.4, aes(linetype = temp, color = temp, group = TreeID))+
   # geom_smooth( aes(fill = temp))+
   # geom_boxplot(aes(group = yday(date)))+
@@ -126,7 +127,7 @@ ggplot(filter(vwc_comp, water == "drought"), aes(x = yday(date), y = vwc_frac))+
 #ggsave("figures/VWCfrac_Box_preHW.jpg", last_plot(), width = 8, height = 5)
 
 
-ggplot(vwc_comp, aes(x = yday(date)-202, y = vwc_frac))+
+ggplot(vwc_comp, aes(x = day, y = vwc_frac))+
   geom_point(pch = 1, alpha = 0.2)+
   geom_line(aes(group = TreeID, color = water), alpha = 0.7)+
   facet_wrap(~spp)+
@@ -134,11 +135,7 @@ ggplot(vwc_comp, aes(x = yday(date)-202, y = vwc_frac))+
   labs(x = "Day", y = "Fraction of max soil moisture", linetype = "Species", fill = "Species")
 
 
-soil_avgs <- filter(vwc_comp, date >= as.POSIXct("2025-10-05") &
-                    water == "drought") %>%  
-  # update with more recent date after this week
-  group_by(spp) %>% 
-  summarise(mean_vwc_frac = mean(vwc_frac))
+
 
 
 

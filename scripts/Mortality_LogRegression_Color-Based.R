@@ -87,7 +87,7 @@ pien_glm <- glm(life ~ day*temp, data = mort_pien, family = binomial); summary(p
 
 
 # single model approach...
-mort_glm <- glm(life ~ day*spp*temp, data = trees_dates, family = binomial)
+mort_glm <- glm(life ~ day + day:spp + spp:temp, data = trees_dates, family = binomial)
 summary(mort_glm)
 
 expit <- function(x){
@@ -120,17 +120,28 @@ ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
   theme_minimal(base_size = 15)+
   labs(x = "Days of drought", y = "% survival")
 
+# read in stress days:
+stress_days <- read_csv("data/Experiment/Processed/Water_Limitation_Days.csv")
+stress_means <- stress_days %>% 
+  group_by(spp, temp) %>% 
+  summarise(mean_lim = mean(cpt), med_lim = median(cpt))
+
+
+
+
 ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
   geom_hline(yintercept = 50, color = "gray50", linetype=4)+
   geom_line(aes(color = spp, linetype = temp,
                 group = interaction(temp, water, spp),
                 x = day, y = 100*pred))+
-  # scale_color_manual(values=c("blue", "red"))+
-  # scale_fill_manual(values=c("blue", "red"))+
+  scale_color_manual(values=c("#D81B60", "#1E88E5", "#FFC024", "#004D40"))+
+  scale_fill_manual(values=c("#D81B60", "#1E88E5", "#FFC024", "#004D40"))+  
+  geom_vline(data = stress_means, aes(xintercept = mean_lim, color = spp,
+                                      linetype = temp))+
   geom_ribbon(alpha = 0.2, aes(fill = spp, linetype = temp,
                                group = interaction(temp, water, spp),
                                x = day, ymin = ci_lo*100, ymax = ci_hi*100))+
-  # facet_wrap(~spp, ncol = 2)+
+  facet_wrap(~spp, ncol = 2)+
   theme_minimal(base_size = 15)+
   labs(x = "Days of drought", y = "% survival")
 
@@ -144,15 +155,15 @@ get_LD50 = function(fit){
   )
 }
 
-# ld50s <- trees_dates %>% 
-#   filter(water == "drought") %>% 
-#   group_by(spp, temp) %>%
-#   nest(data = -c(spp)) %>% 
-#   mutate(fitted = map(data, ~ get_LD50(fit = glm(life ~ day + temp, family = "binomial", data = .)))) %>% 
-#   unnest(cols = c(data, fitted)) %>% 
-#   dplyr::select(spp, temp, LD50, CI) %>% 
-#   mutate(ci_lo = LD50-CI, ci_hi = LD50+CI) %>% 
-#   unique()
+ld50s <- trees_dates %>%
+  filter(water == "drought") %>%
+  group_by(spp, temp) %>%
+  nest(data = -c(spp)) %>%
+  mutate(fitted = map(data, ~ get_LD50(fit = glm(life ~ day + temp, family = "binomial", data = .)))) %>%
+  unnest(cols = c(data, fitted)) %>%
+  dplyr::select(spp, temp, LD50, CI) %>%
+  mutate(ci_lo = LD50-CI, ci_hi = LD50+CI) %>%
+  unique()
 
 # ld50s <- trees_dates %>%
 #   filter(water == "drought") %>%

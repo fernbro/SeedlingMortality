@@ -305,6 +305,12 @@ PIEN38,19.8,2025-11-24,PIEN,38,heatwave,water,126
 PIEN42,19.1,2025-11-24,PIEN,42,heatwave,water,126
 PIEN46,19.3,2025-11-24,PIEN,46,heatwave,water,126
 PIEN56,0,2025-11-24,PIEN,56,heatwave,drought,126
+PIFL36,18.7,2026-01-12,PIFL,36,heatwave,water,175
+PIFL40,0,2026-01-12,PIFL,40,heatwave,drought,175
+PIFL41,17.8,2026-01-12,PIFL,41,heatwave,water,175
+PIFL46,16.9,2026-01-12,PIFL,46,heatwave,water,175
+PIFL52,16.3,2026-01-12,PIFL,52,heatwave,water,175
+PIFL55,16.6,2026-01-12,PIFL,55,heatwave,water,175
 PIFL1,10.9,2025-07-24,PIFL,1,ambient,water,3
 PIFL3,9.5,2025-07-24,PIFL,3,ambient,drought,3
 PIFL9,8.8,2025-07-24,PIFL,9,ambient,water,3
