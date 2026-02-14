@@ -74,10 +74,6 @@ chamber_pre <- chamber_data %>%
   group_by(chamber) %>% 
   summarise(tmean = mean(temp))
 
-ggplot(chamber_pre, aes(x = datetime, y = temp))
-  geom_line(aes(group = kest))+
-  # facet_wrap(~set)
-
 
 # chamber_wide <- chamber_data %>% 
 #   pivot_wider(names_from = chamber,
@@ -203,6 +199,8 @@ diurnals_HW <- chamber_data %>%
   summarise(temp_m = mean(temp),
             rh_m = mean(rh),
             vpd_m = mean(vpd),
+            vpdmax = max(vpd),
+            vpdmin = min(vpd),
             temp_sd = sd(temp),
             rh_sd = sd(rh),
             vpd_sd = sd(vpd)
@@ -236,10 +234,23 @@ ggplot(diurnals_noHW, aes(x = time, y = vpd_m, color = chamber))+
   theme_light(base_size = 20)+
   labs(x = "Time of day", y = "VPD (kPa)")
 
+ggplot(diurnals_noHW, aes(x = time, y = vpd_m, color = chamber))+
+  geom_line(linewidth = 2)+
+  geom_ribbon(color = "white", aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
+                                   fill = chamber), alpha = 0.3)+
+  theme_light(base_size = 20)+
+  labs(x = "Time of day", y = "VPD (kPa)")
+
 ggplot(diurnals_HW, aes(x = time, y = vpd_m, color = chamber))+
   geom_line(linewidth = 2)+
-  geom_ribbon(aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
-                  fill = chamber), alpha = 0.1)+
+  geom_ribbon(color = "white", aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
+                   fill = chamber), alpha = 0.3)+
+  theme_light(base_size = 20)+
+  labs(x = "Time of day", y = "VPD (kPa)")
+
+ggplot(diurnals_HW, aes(x = time, color = chamber))+
+  geom_line(linewidth = 2, aes(y = vpdmax))+
+  geom_line(linewidth = 2, aes(y = vpdmin))+
   theme_light(base_size = 20)+
   labs(x = "Time of day", y = "VPD (kPa)")
 

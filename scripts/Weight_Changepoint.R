@@ -1,5 +1,5 @@
 library(tidyverse)
-library(changepoint) # tidychangepoint?
+library(changepoint)
 
 hw_colors <- c("blue", "red")
 
@@ -9,11 +9,11 @@ hw_colors <- c("blue", "red")
 morph <- read_csv("data/Experiment/Processed/Weight_Diam_Color.csv") %>% 
   mutate(date = date(date))
 
-examp <- stress_df %>% 
-  filter(TreeID == "PIEN4") %>% 
-  dplyr::select(weight)
-
-x <- cpt.mean(examp$weight, method = "AMOC", class = F)[[1]] 
+# examp <- stress_df %>% 
+#   filter(TreeID == "PIEN4") %>% 
+#   dplyr::select(weight)
+# 
+# x <- cpt.mean(examp$weight, method = "AMOC", class = F)[[1]] 
 
 # this just looks at changes in the MEAN WEIGHT, *not the rate of change*
 # could simply differentiate and it might be ok?
@@ -45,9 +45,14 @@ for(i in 1:length(ind)){
                             y = weight_id$weight) # create a smooth spline for that data
   
   predict_d1 <- predict(smoother, deriv = 1,
-                        x = seq(from = min(weight_id$day), to = max(weight_id$day), by = 1))$y
+                        x = seq(from = min(weight_id$day), 
+                                to = max(weight_id$day), 
+                                by = 1))$y
+  
   stress_day_1 <- data.frame(TreeID = ID,
-                             cpt = cpt.mean(predict_d1, method = "AMOC", class = F)[[1]])
+                             cpt = cpt.mean(predict_d1, 
+                                            method = "AMOC", 
+                                            class = F)[[1]])
   
   stress_day <- rbind(stress_day, stress_day_1)
 }
@@ -55,6 +60,11 @@ for(i in 1:length(ind)){
 
 stress_days <- stress_day %>% 
   inner_join(unique(dplyr::select(morph, TreeID, spp, id, temp, water)))
+
+test <- full_join(stress_days, death_days)
+cor.test(test$cpt, test$day)
+cor.test(filter(test, temp == "heatwave")$cpt, filter(test, temp == "heatwave")$day)
+cor.test(filter(test, temp == "ambient")$cpt, filter(test, temp == "ambient")$day)
 
 # write_csv(stress_days, "data/Experiment/Processed/Water_Limitation_Days.csv")
 

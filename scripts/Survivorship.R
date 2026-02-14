@@ -3,16 +3,28 @@ library(tidyverse)
 library(survival)
 
 start_exp <- yday(as.POSIXct("2025-07-21"))
+hw_colors <- c("blue", "red")
 fl <- read_csv("data/Experiment/Processed/Fluorescence.csv") %>% 
   mutate(date = date(date))
 con <- read_csv("data/Experiment/Processed/Conductance.csv") %>% 
   mutate(date = date(date))
 brown <- read_csv("data/Experiment/Processed/Ocular_Color.csv") %>% 
-  mutate(date = date(date))
-
+  mutate(date = date(date)) %>% 
+  mutate(brown_perc = case_when(brown_perc == ">9" ~ ">90%",
+                                brown_perc == "10" ~ "<10%",
+                                brown_perc == "25" ~ "10-25%",
+                                brown_perc == "50" ~ "25-50%",
+                                brown_perc == "75" ~ "50-75%",
+                                brown_perc == "90" ~ "75-90%"))
+brown$brown_perc <- factor(brown$brown_perc, levels = c("<10%",
+                                                        "10-25%",
+                                                        "25-50%",
+                                                        "50-75%",
+                                                        "75-90%",
+                                                        ">90%"))
 
 # ummm what is going on here bruh
-ggplot(brown, aes(x = day, y = brown))+
+ggplot(brown, aes(x = day, y = brown_perc))+
   geom_line(aes(group = TreeID, color = spp), alpha = 0.6)+
   geom_point(aes(color = spp))+
   # geom_smooth(aes(group = spp))+
@@ -21,10 +33,10 @@ ggplot(brown, aes(x = day, y = brown))+
   labs(x = "Day", y = "% of foliage brown", color = "Species")
 
 brown_sum <- brown %>% 
-  group_by(spp, brown, water, temp, day) %>% 
+  group_by(spp, brown_perc, water, temp, day) %>% 
   summarise(total = n())
 
-ggplot(filter(brown_sum, water == "drought"), aes(x = day, y = brown))+
+ggplot(filter(brown_sum, water == "drought"), aes(x = day, y = brown_perc))+
   # geom_line(aes(color = spp), alpha = 0.6)+
   geom_point(aes(color = temp, size = total), alpha = 0.6)+
   # geom_smooth(aes(group = spp))+
@@ -35,23 +47,28 @@ ggplot(filter(brown_sum, water == "drought"), aes(x = day, y = brown))+
 # fl-brown comparison:
 
 br_sub <- brown %>% 
-  dplyr::select(spp, TreeID, id, temp, water, brown, week)
+  dplyr::select(spp, TreeID, id, temp, water, brown_perc, week)
 
 fl_sub <- fl %>% 
   dplyr::select(spp, TreeID, id, temp, water, Fv_Fm_dark, week)
   
 fl_br <- inner_join(fl_sub, br_sub) %>% 
-  filter(!is.na(brown), !is.na(Fv_Fm_dark))
+  filter(!is.na(brown_perc), !is.na(Fv_Fm_dark))
 
-ggplot(filter(fl_br, water == "drought"), aes(x = brown, y = Fv_Fm_dark))+
-  geom_bin_2d(bins = 50)+
+# ggplot(filter(fl_br, water == "drought"), aes(x = brown, y = Fv_Fm_dark))+
+#   geom_bin_2d(bins = 50)+
+#   facet_wrap(~spp)+
+#   theme_minimal()
+
+ggplot(filter(fl_br, water == "drought"), aes(x = brown_perc, y = Fv_Fm_dark))+
+  geom_boxplot(aes(fill = temp, color = temp), alpha = 0.6)+
+  # geom_point(aes(color = temp), position = "jitter")+
+  geom_hline(yintercept = 0.1, linetype = 2, color = "gray20")+
+  theme_minimal(base_size = 18)+
+  scale_color_manual(values = hw_colors)+
+  scale_fill_manual(values = hw_colors)+
   facet_wrap(~spp)+
-  theme_minimal()
-
-ggplot(filter(fl_br, water == "drought"), aes(x = as.factor(brown), y = Fv_Fm_dark))+
-  geom_boxplot()+
-  theme_minimal()+
-  facet_wrap(~spp)
+  labs(x = "Amount of brown foliage", y = "Fv/Fm", color = "Temp", fill = "Temp")
 
 ggplot(filter(fl_br, water == "drought"), aes(x = as.factor(brown), y = Fv_Fm_dark))+
   geom_boxplot(aes(fill = spp))+

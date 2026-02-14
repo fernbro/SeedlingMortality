@@ -86,6 +86,35 @@ ggplot(filter(prov_clim, month == 6))+
        y = "June max VPD (kPa), 1984 - 2024", fill = "Species")
 
 ggplot(filter(prov_clim, month == 6))+
+  # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
+  geom_boxplot(aes(x = spp, y = vpdmax, fill = spp))+
+  theme_light(base_size = 23)+
+  labs(x = "Species",
+       y = "June max VPD (kPa), 1984 - 2024", fill = "Species")
+
+ggplot(filter(prov_clim, month == 6))+
+  # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
+  geom_point(aes(x = year, y = vpdmax, color = spp))+
+  theme_light(base_size = 23)+
+  labs(x = "Year", y = "Daily max VPD (kPa) in June, 1984 - 2024")
+
+ggplot(filter(prov_clim, month == 6))+
+  # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
+  geom_point(aes(x = year, y = vpd, color = doy))+
+  theme_light(base_size = 23)+
+  labs(x = "Year", y = "Daily mean VPD (kPa) in June, 1984 - 2024")
+
+
+
+
+ggplot(filter(prov_clim, month == 6))+
+  # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
+  geom_point(aes(x = year, y = vpdmax, fill = spp))+
+  theme_light(base_size = 23)+
+  labs(x = "Species",
+       y = "June max VPD (kPa), 1984 - 2024", fill = "Species")
+
+ggplot(filter(prov_clim, month == 6))+
   geom_boxplot(aes(x = spp, y = vpd, fill = spp))+
   theme_light(base_size = 23)+
   labs(x = "Species",

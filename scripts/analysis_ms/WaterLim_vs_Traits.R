@@ -3,6 +3,11 @@ library(AICcmodavg)
 
 stress_days <- read_csv("data/Experiment/Processed/Water_Limitation_Days.csv")
 
+stress_sum <- stress_days %>% 
+  group_by(spp) %>% 
+  summarise(mean_lim = mean(cpt),
+            sd_lim = sd(cpt))
+
 # morphological data:
 
 height <- read_csv("data/Experiment/TreeHeight_ForAnalysis.csv")[,1:2] # height from soil base to top of foliage in mm

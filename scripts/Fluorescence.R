@@ -6,6 +6,7 @@ water <- read_csv("data/Experiment/Raw/Watered_Plants.csv")$TreeID
 dates <- read_csv("data/Experiment/Dates.csv") %>% 
   mutate(date = as.POSIXct(date, tryFormats = "%m/%e/%y"))
 hw_colors <- c("blue", "red")
+w_colors <- c("red", "blue")
 hw_days <- c(19,25)
 
 fl_files <- list.files("data/Experiment/Raw/Fluorescence", full.names = T)
@@ -35,6 +36,12 @@ fluor <- bind_rows(fl_dat) %>%
 
 write_csv(fluor, "data/Experiment/Processed/Fluorescence.csv")
 
+max_fl <- fluor %>% 
+  group_by(TreeID) %>% 
+  summarise(max = max(Fv_Fm_dark)) %>% 
+  mutate(mort_perc_loss = (max-0.1)/max,
+         pl95 = 0.05*max)
+
 dead_trees <- (filter(fluor, Fv_Fm_dark < 0.1, water == "drought")) %>%  
   filter(spp=="PIFL") %>% 
   group_by(TreeID) %>% 
@@ -54,11 +61,12 @@ ggplot(fluor, aes(x = day, y = Fv_Fm_dark, group = spp))+
   geom_line(alpha = 0.3, aes(group = TreeID, linetype = temp))+
   geom_point(aes(group = interaction(date, water), fill = water, color = water,
                  shape = temp), 
-             size = 2, alpha = 0.6)+
+             size = 2, alpha = 0.5)+
   facet_wrap(~spp, ncol = 1)+
   annotate("rect", alpha = 0.3, xmin = hw_days[1], xmax = hw_days[2], ymin = 0, ymax = 0.85,
            fill = "orange")+
-  # scale_fill_manual(values = hw_colors)+
+  scale_fill_manual(values = w_colors)+
+  scale_color_manual(values = w_colors)+
   scale_shape_manual(values=c(21,22))+
   theme_minimal(base_size = 15)+
   # geom_smooth(aes(group = interaction(water, temp), fill = temp, linetype = water))+

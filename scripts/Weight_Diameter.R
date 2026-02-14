@@ -29,24 +29,26 @@ morph <- bind_rows(morph_dat) %>%
                           id >= 31 ~ "heatwave"),
          water = case_when(TreeID %in% water ~ "water",
                            .default = "drought"),
-         brown = as.numeric(case_when(brown_perc == "10" ~ "5",
-                                      brown_perc == "25" ~ "17.5",
-                                      brown_perc == "50" ~ "37.5",
-                                      brown_perc == "75" ~ "62.5",
-                                      brown_perc == "90" ~ "82.5",
-                                      brown_perc == ">9" ~ "95")),
+         # brown = as.numeric(case_when(brown_perc == "10" ~ "5",
+         #                              brown_perc == "25" ~ "17.5",
+         #                              brown_perc == "50" ~ "37.5",
+         #                              brown_perc == "75" ~ "62.5",
+         #                              brown_perc == "90" ~ "82.5",
+         #                              brown_perc == ">9" ~ "95")),
          date = date(date),
          weight = Pot_weight_g) %>% 
   mutate(day = case_when(year(date) == 2025 ~ yday(date)-202,
                                year(date) == 2026 ~ 365 - 202 + yday(date))) %>% 
-  dplyr::select(-brown_perc, -Pot_weight_g) %>% 
+  dplyr::select(
+    # -brown_perc, 
+                -Pot_weight_g) %>% 
   full_join(weeks) %>% 
   filter(!is.na(weight))
 
 write_csv(morph, "data/Experiment/Processed/Weight_Diam_Color.csv")
 
 morph %>% 
-  dplyr::select(date, week, day, spp, TreeID, id, temp, water, brown) %>% 
+  dplyr::select(date, week, day, spp, TreeID, id, temp, water, brown_perc) %>% 
   write_csv("data/Experiment/Processed/Ocular_Color.csv")
 
 ggplot(morph, aes(x = day, y = weight))+

@@ -18,8 +18,9 @@ con_vwc <- full_join(con, vwc) %>%
   mutate(chamber = case_when(spp %in% c("PIPO", "PSME") & id < 31 ~ 1,
                              spp %in% c("PIPO", "PSME") & id > 30 ~ 2,
                              spp %in% c("PIFL", "PIEN") & id < 31 ~ 3,
-                             spp %in% c("PIFL", "PIEN") & id > 30 ~ 4)) %>% 
-  inner_join(kest)
+                             spp %in% c("PIFL", "PIEN") & id > 30 ~ 4),
+         log_con = log(con)) %>% 
+  inner_join(kest) # add met data
 
 ggplot(con_vwc, aes(x = vwc, y = con))+
   geom_point(aes(color = spp, shape = water))+
@@ -43,7 +44,7 @@ ggplot(filter(con_vwc, water == "drought"), aes(x = vwc, y = con))+
   facet_wrap(~temp)+
   labs(x = "Volumetric water content (%)", y = "Conductance (mmol/m2/s)")
 
-vwc2 <- (lm(con ~ poly(vwc, 2) * vpd * spp, data = con_vwc));summary(vwc2)
+vwc2 <- (lm(log_con ~ vwc*spp + vpd*spp + spp*temp + spp*water, data = con_vwc));summary(vwc2)
 # vwc2 <- (lm(con ~ vwc * spp, data = con_vwc));summary(vwc2)
 anova(vwc2)
 
@@ -52,8 +53,8 @@ vwc2_p <- data.frame(predict.lm(vwc2, interval = "confidence")) %>%
 
 ggplot(vwc2_p, aes(x = vwc, y = con))+
   geom_point(aes(color = spp, shape = water))+
-  geom_line(aes(y = fit, color = spp))+
-  geom_ribbon(aes(ymax = upr, ymin = lwr, fill = spp), alpha = 0.3)+
+  geom_line(aes(y = exp(fit), color = spp))+
+  geom_ribbon(aes(ymax = exp(upr), ymin = exp(lwr), fill = spp), alpha = 0.3)+
   theme_minimal(base_size = 20)+
   # theme(strip.background = element_rect(color = "black", fill = "white"))+
   # theme(strip.text = element_text(colour = 'black'))+
@@ -61,9 +62,33 @@ ggplot(vwc2_p, aes(x = vwc, y = con))+
   labs(x = "Volumetric water content (%)", y = "Conductance (mmol/m2/s)",
        fill = "Species", shape = "Water", color = "Species")
 
-ggplot(vwc2_p, aes(x = con, y = fit))+
+ggplot(vwc2_p, aes(x = log(con), y = fit))+
   geom_point(aes(color = spp))+
   geom_abline(slope = 1, intercept = 0)
+
+
+# best emmeans guide: https://stats.oarc.ucla.edu/wp-content/uploads/2023/03/interactions_r.html
+
+emmip(vwc2, spp ~ vpd, dodge = 0,
+      at = list(vpd = c(0, 0.25, 0.5, 0.75, 1)), CIs = T)+
+  # facet_wrap(~spp, scales = "free_x")+
+  labs(x = "VPD (kPa)", y = "log of conductance")+
+  theme_light(base_size = 20)
+  # geom_ribbon(aes(group = spp))
+
+emmip(vwc2, spp ~ vwc, dodge = 0,
+      at = list(vwc = c(seq(0,12,by=2))), CIs = T, plotit = F) %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = vwc, y = yvar))+
+  labs(x = "VWC (%)", y = "log of conductance")+
+  geom_line(aes(linetype = spp))+
+  geom_ribbon(aes(ymin = LCL, ymax = UCL, color = spp), fill = "gray", alpha = 0.3)+
+  theme_light(base_size = 20)
+
+emmip(vwc2, spp ~ vwc, dodge = 0,
+      at = list(vwc = c(seq(0,12,by=2))), CIs = T)+
+  theme_minimal(base_size = 20)+
+  labs(x = "VWC (%)", y = "log of conductance")
 
 # model 1: fitting mixed model with random effect of species
             mixedmod <- lmer(con ~ 1 + VWC_perc + (1 + VWC_perc | (spp)), con_vwc, REML = F)
