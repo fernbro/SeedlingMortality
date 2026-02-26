@@ -1,6 +1,8 @@
 library(tidyverse)
 options(digits = 10)
 library(RcppRoll)
+# install.packages("climatrends")
+library(climatrends)
 
 # DAILY data acquired from PRISM explorer (https://prism.oregonstate.edu/explorer/) on Thursday, June 19th, 2025
 # see acquisition parameters in original CSVs
@@ -44,11 +46,20 @@ prov_clim <- rbind(pipo, pifl, psme, pien) %>%
   filter(year != 2024) # incomplete data
 names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax", "ppt",
                       "spp", "doy", "year", "month")
+
+
 prov_clim <- prov_clim %>% 
   mutate(vpdmax = vpdmax/10, vpdmin = vpdmin/10) %>% 
   mutate(vpd = (vpdmax+vpdmin)/2)
 # prov_clim <- prov_clim %>% 
 #   mutate(tmean = as.numeric(tmean))
+
+# how to check for days < 5mm?
+
+rainfall(filter(prov_clim, spp == "PIPO")$ppt)
+rainfall(filter(prov_clim, spp == "PSME")$ppt)
+rainfall(filter(prov_clim, spp == "PIEN")$ppt)
+rainfall(filter(prov_clim, spp == "PIFL")$ppt)
 
 # lets get the day of peak VPD and day of first (daily) PPT >= 1
 
@@ -61,7 +72,7 @@ prov_jjas_vpd <- prov_clim %>%
           peak_vpd_day = doy[which(vpd == peak_vpd)])
 
 peak_of_vpd <- prov_clim %>% 
-  filter(month >= 6) %>%
+  # filter(month >= 6) %>%
   group_by(year, spp) %>% 
   arrange(doy) %>% 
   reframe(peak_vpd = max(vpd),
@@ -79,7 +90,7 @@ daily_avg <- prov_clim %>%
 # can also assign species-specific thresholds?
 
 monsoon_start <- prov_clim %>% 
-  filter(month >= 6) %>% 
+  filter(doy < 250 & month >= 6) %>% 
   dplyr::select(spp, year, doy, ppt) %>% 
   arrange(doy) %>% 
   mutate(ppt_thresh = case_when(ppt >= 1.56 ~ 1, # insert the threshold here
@@ -106,6 +117,11 @@ diffs <- start_vs_peak %>%
   summarise(mean_diff = mean(diff),
             med_diff = median(diff))
 
+yrly_ppt <- prov_clim %>% 
+  group_by(spp, year) %>% 
+  summarise(ppt = sum(ppt))
+  
+
 # positive diff: the start day was later than the peak VPD day
 # negative diff: the start day was before the peak VPD day
 
@@ -113,10 +129,20 @@ ggplot(start_vs_peak, aes(x = peak_vpd_day, y = start_day))+
   geom_point(aes(color = spp))+
   geom_abline(slope = 1, intercept = 0)
 
+start_vs_peak <- full_join(start_vs_peak, yrly_ppt)
+
+starts_stats <- start_vs_peak %>% 
+  group_by(spp) %>% 
+  summarise(mean_peak_day = mean(peak_vpd_day),
+            mean_start_day = mean(start_day),
+            med_peak_day = median(peak_vpd_day),
+            med_start_day = median(start_day))
+
 ggplot(start_vs_peak, aes(x = year, y = diff))+
-  geom_point(aes(color = peak_vpd))+
+  geom_point(aes())+
   geom_hline(yintercept = 0)+
-  geom_smooth(method = "lm")+
+  geom_smooth()+
+  # geom_smooth(method = "lm")+
   facet_wrap(~spp, scales = "free")+
   theme_minimal(base_size = 20)+
   labs(x = "Year", y = "Days post-peak VPD before monsoon onset")
@@ -193,16 +219,16 @@ ggplot(start_vs_peak, aes(x = year, y = diff))+
 #rollapply(.$at_least_5, width = 10, FUN = isTRUE, align = "left", fill = NA)
 
 
-aprov_jjas_ppt <- prov_clim %>% 
-  filter(month %in% c(6, 7, 8, 9)) %>%
-  # filter(month == 6) %>%
+# first day where ppt > 5 mm:
+prov_jjas_ppt <- prov_clim %>% 
+  filter(month >= 6) %>%
   dplyr::select(spp, year, doy, ppt) %>% 
   filter(ppt >= 5) %>% 
   group_by(year, spp) %>% 
   reframe(first_ppt_day = min(doy))
 
-# ppt_vpd <- full_join(prov_jjas_vpd, prov_jjas_ppt) %>% 
-#   mutate(diff = first_ppt_day - peak_vpd_day)
+ppt_vpd <- full_join(prov_jjas_vpd, prov_jjas_ppt) %>%
+  mutate(diff = first_ppt_day - peak_vpd_day)
 
 ggplot(ppt_vpd, aes(x = peak_vpd_day, y = first_ppt_day))+
   geom_point(aes(color = year))+
@@ -286,8 +312,7 @@ ggplot(filter(prov_clim, month == 6))+
 ggplot(filter(prov_clim, month == 7))+
   geom_density(aes(x = vpd, fill = spp), alpha = 0.3)+
   theme_light(base_size = 23)+
-  labs(x = "VPD (kPa)",
-       y = "July mean daily VPD (kPa), 1984 - 2024", fill = "Species")
+  labs(x = "July mean daily VPD (kPa), 1984 - 2024", fill = "Species")
 
 # create a range of monthly VPD curves
 # remember: spp corresponds to location
@@ -304,7 +329,21 @@ prov_vpd_jul <- prov_clim %>%
   summarise(vpdmax_mean = mean(vpdmax, na.rm = T), 
             vpdmin_mean = mean(vpdmin, na.rm = T),
             vpdmax_sd = sd(vpdmax, na.rm = T), 
-            vpdmin_sd = sd(vpdmin, na.rm = T)) %>%
+            vpdmin_sd = sd(vpdmin, na.rm = T),
+            ppt_mean = mean(ppt, na.rm = T),
+            ppt_sd = sd(ppt, na.rm = T)) %>%
+  mutate(vpd_mean = vpdmax_mean - vpdmin_mean,
+         vpd_sd = sd(vpd_mean))
+
+prov_mo <- prov_clim %>% 
+  # filter(month == 7) %>% 
+  group_by(spp, month) %>% 
+  summarise(vpdmax_mean = mean(vpdmax, na.rm = T), 
+            vpdmin_mean = mean(vpdmin, na.rm = T),
+            vpdmax_sd = sd(vpdmax, na.rm = T), 
+            vpdmin_sd = sd(vpdmin, na.rm = T),
+            ppt_mean = mean(ppt, na.rm = T),
+            ppt_sd = sd(ppt, na.rm = T)) %>%
   mutate(vpd_mean = vpdmax_mean - vpdmin_mean,
          vpd_sd = sd(vpd_mean))
 
@@ -316,14 +355,23 @@ ggplot(prov_vpd_jul, aes(x = doy, y = vpdmax_mean))+
                     ymin = vpdmax_mean - vpdmax_sd))+
   geom_vline(xintercept = 166)
 
-ggplot(prov_vpd_jul, aes(x = doy, y = vpd_mean))+
-  geom_line(aes(color = spp))+
+ggplot(prov_vpd_jul)+
+  geom_line(aes(x = doy, y = vpd_mean, color = spp))+
+  # geom_col(aes(x = doy, y = ppt_mean), position = "identity")+
+  geom_line(aes(x = doy, y = ppt_mean))+
   facet_wrap(~spp)+
+  # geom_vline(xintercept = 166)+
   geom_ribbon(alpha = 0.4,
-    aes(fill = spp,
+    aes(fill = spp, x = doy, y = vpd_mean,
                     ymax = vpdmax_mean + vpdmax_sd, 
                     ymin = vpdmax_mean - vpdmax_sd))+
-  geom_vline(xintercept = 166)
+geom_ribbon(alpha = 0.4,
+            aes(fill = spp, x = doy, y = ppt_mean,
+                ymax = ppt_mean + ppt_sd, 
+                ymin = 0))
+
+ggplot(prov_mo, aes(x = month, y = vpd_mean))+
+  geom_line(aes(color = spp))
 
 # compare mean date of Peak VPD with mean date of first ppt != 0?
 # what is the window..?

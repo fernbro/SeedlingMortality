@@ -100,7 +100,9 @@ daily_avgs <- chamber_data %>%
   group_by(kest, chamber, set, day) %>% 
   summarise(temp = mean(temp, na.rm = T), 
             rh = mean(rh, na.rm = T),
-            vpd = mean(vpd, na.rm = T))
+            vpd_m = mean(vpd, na.rm = T),
+            vpd_max = max(vpd),
+            vpd_min = min(vpd))
 
 daily_ch <- chamber_data %>% 
   group_by(chamber, set, day) %>% 
@@ -117,11 +119,12 @@ ggplot(daily_avgs, aes(x = day, y = rh))+
   labs(x = "Day", y = "Daily mean chamber RH (%)", color = "Chamber")
 # ggsave("figures/Daily_RH.png", width = 6, height = 5, units = "in")
 
-ggplot(daily_avgs, aes(x = day, y = vpd))+
+ggplot(daily_avgs, aes(x = day, y = vpd_m))+
   geom_line(aes(color = chamber, group = kest))+
+  geom_line(aes(y = vpd_max, color = chamber, group = kest))+
   theme_light(base_size = 16)+
   labs(x = "Day", y = "Daily mean chamber VPD (kPa)", color = "Chamber")
-ggsave("figures/Daily_VPD.png", width = 6, height = 5, units = "in")
+# ggsave("figures/Daily_VPD.png", width = 6, height = 5, units = "in")
 
 ggplot(filter(chamber_data), aes(x = day, y = temp))+
   geom_line(aes(linetype = chamber, color = kest))+
@@ -190,6 +193,18 @@ diurnals_noHW <- chamber_data %>%
             vpd_sd = sd(vpd)
             )
 
+ch_avgs <- chamber_data %>% 
+  filter(datetime >= as.POSIXct("2025-07-21")) %>%
+  # mutate(time = as_hms(datetime)) %>% 
+  group_by(chamber, set) %>% 
+  summarise(temp_m = mean(temp),
+            rh_m = mean(rh),
+            vpd_m = mean(vpd),
+            temp_sd = sd(temp),
+            rh_sd = sd(rh),
+            vpd_sd = sd(vpd)
+  )
+
 diurnals_HW <- chamber_data %>% 
   filter(datetime > as.POSIXct("2025-08-08 21:00:00") 
          & datetime < as.POSIXct("2025-08-15 16:00:00"),
@@ -236,8 +251,8 @@ ggplot(diurnals_noHW, aes(x = time, y = vpd_m, color = chamber))+
 
 ggplot(diurnals_noHW, aes(x = time, y = vpd_m, color = chamber))+
   geom_line(linewidth = 2)+
-  geom_ribbon(color = "white", aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
-                                   fill = chamber), alpha = 0.3)+
+  # geom_ribbon(color = "white", aes(ymin = vpd_m - vpd_sd, ymax = vpd_m + vpd_sd, 
+  #                                  fill = chamber), alpha = 0.3)+
   theme_light(base_size = 20)+
   labs(x = "Time of day", y = "VPD (kPa)")
 

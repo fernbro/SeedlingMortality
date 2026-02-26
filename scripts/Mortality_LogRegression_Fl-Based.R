@@ -151,6 +151,17 @@ ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
   theme_minimal(base_size = 15)+
   labs(x = "Days of drought", y = "% survival")
 
+emmip(mort_glm, day ~ spp + temp, type = "response", 
+      # at = list(day = c(25, 50, 75, 100, 125, 150)),
+      CIs = T)
+
+emmip(con_mod, spp ~ day | water,
+      at = list(day = c(25, 50, 75, 100, 125, 150)),
+      type = "response", CIs = T)
+
+emmip(vwc2, spp ~ vwc, dodge = 0,
+      at = list(vwc = c(seq(0,12,by=2))), CIs = T)
+
 ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
   geom_hline(yintercept = 50, color = "gray50", linetype=4)+
   geom_line(aes(color = temp, linetype = temp,
