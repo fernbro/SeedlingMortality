@@ -1,6 +1,7 @@
 library(tidyverse)
 library(lme4)
 library(MuMIn)
+library(emmeans)
 
 con <- read_csv("data/Experiment/Processed/Conductance.csv") %>% 
   mutate(date = date(date))
@@ -44,6 +45,17 @@ ggplot(filter(con_vwc, water == "drought"), aes(x = vwc, y = con))+
   facet_wrap(~temp)+
   labs(x = "Volumetric water content (%)", y = "Conductance (mmol/m2/s)")
 
+ggplot(filter(con_vwc, water == "drought"), aes(x = vpd, y = con))+
+  geom_point(aes(color = spp, shape = water))+
+  geom_smooth(
+    # aes(fill = spp, color = spp), 
+    alpha = 0.2)+
+  theme_light(base_size = 20)+
+  theme(strip.background = element_rect(color = "black", fill = "white"))+
+  theme(strip.text = element_text(colour = 'black'))+
+  facet_wrap(~temp)+
+  labs(x = "Chamber mean daily VPD (kPa)", y = "Conductance (mmol/m2/s)")
+
 vwc2 <- (lm(log_con ~ vwc*spp + vpd*spp + spp*temp + spp*water, data = con_vwc));summary(vwc2)
 # vwc2 <- (lm(con ~ vwc * spp, data = con_vwc));summary(vwc2)
 anova(vwc2)
@@ -69,12 +81,31 @@ ggplot(vwc2_p, aes(x = log(con), y = fit))+
 
 # best emmeans guide: https://stats.oarc.ucla.edu/wp-content/uploads/2023/03/interactions_r.html
 
-emmip(vwc2, spp ~ vpd, dodge = 0,
-      at = list(vpd = c(0, 0.25, 0.5, 0.75, 1)), CIs = T)+
+emmip(vwc2, spp ~ vpd + vwc, dodge = 0,
+      at = list(vpd = c(0, 0.25, 0.5, 0.75, 1, 1.5),
+                vwc = c(0, 5, 10, 15)), CIs = T)+
   # facet_wrap(~spp, scales = "free_x")+
   labs(x = "VPD (kPa)", y = "log of conductance")+
-  theme_light(base_size = 20)
+  theme_light(base_size = 20)+
+  facet_wrap(~vwc, scales = "free")
   # geom_ribbon(aes(group = spp))
+
+emmip(vwc2, spp ~ vpd + water, dodge = 0,
+      at = list(vpd = c(0, 0.25, 0.5, 0.75, 1, 1.5)), CIs = T)+
+  # facet_wrap(~spp, scales = "free_x")+
+  labs(x = "VPD (kPa)", y = "log of conductance")+
+  theme_light(base_size = 20)+
+  facet_wrap(~water, scales = "free")
+
+# looking @ watered plants:
+vpd_wateronly <- lm(log_con ~ vwc*spp + vpd*spp + spp*temp, 
+                    data = filter(con_vwc, water == "water"))
+anova(vpd_wateronly)
+
+emmip(vpd_wateronly, spp ~ vpd, 
+      at = list(vpd = c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5)),
+      dodge = 0, CIs = T)
+
 
 emmip(vwc2, spp ~ vwc, dodge = 0,
       at = list(vwc = c(seq(0,12,by=2))), CIs = T, plotit = F) %>% 

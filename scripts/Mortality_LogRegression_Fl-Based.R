@@ -33,34 +33,33 @@ dead_trees_gf <- (filter(fl, Fv_Fm_dark < 0.1)) %>%
   filter(day == min(day)) %>% 
   filter(TreeID != "PSME22" & TreeID != "PIPO56")
 
-
-# stats:
-dead_sums <- dead_trees_gf %>% 
-  inner_join(fl_meta) %>% 
-  group_by(spp, temp)
-
-TukeyHSD(aov(day ~ temp : spp, data = dead_sums))
-
-# get means:
-dead_sums <- dead_trees_gf %>% 
-  inner_join(fl_meta) %>% 
-  group_by(spp, temp) %>% 
-  summarise(dead_mean = mean(day),
-            dead_sd = sd(day))
-
-dead_sums_notemp <-  dead_trees_gf %>% 
-  inner_join(fl_meta) %>% 
-  group_by(spp) %>% 
-  summarise(dead_mean = mean(day),
-            dead_sd = sd(day),
-            n = n())
+    # # stats:
+    # dead_sums <- dead_trees_gf %>%
+    #   inner_join(fl_meta) %>%
+    #   group_by(spp, temp)
+    # 
+    # TukeyHSD(aov(day ~ temp : spp, data = dead_sums))
+    # 
+    # # get means:
+    # dead_sums <- dead_trees_gf %>%
+    #   inner_join(fl_meta) %>%
+    #   group_by(spp, temp) %>%
+    #   summarise(dead_mean = mean(day),
+    #             dead_sd = sd(day))
+    # 
+    # dead_sums_notemp <-  dead_trees_gf %>%
+    #   inner_join(fl_meta) %>%
+    #   group_by(spp) %>%
+    #   summarise(dead_mean = mean(day),
+    #             dead_sd = sd(day),
+    #             n = n())
 
 
 names(dead_trees_gf) <- c("TreeID", "dead_day")
 
-metadata <- fl %>% 
-  dplyr::select(spp, id, TreeID, water, temp)
-  
+metadata <- fl %>%
+      dplyr::select(spp, id, TreeID, water, temp)
+
 trees_dates <- full_join(full_blank, dead_trees_gf) %>% 
   mutate(life = case_when(day < dead_day ~ 1,
                           day >= dead_day ~ 0)) %>% 
@@ -71,49 +70,74 @@ trees_dates <- full_join(full_blank, dead_trees_gf) %>%
 # after they die. want predicted curves to bottom out
 # do something to merge and keep the NAs for dead trees (unmeasured) and then change the NAs to a 0 or 1 depending on the data
 
+# dead_trees <- (filter(fl, Fv_Fm_dark < 0.1)) %>% 
+#   group_by(TreeID) %>%
+#   unique() %>% 
+#   mutate(life = 0) %>% 
+#   dplyr::select(TreeID, spp, date, life, temp, water, day) %>% 
+#   group_by(TreeID)
+# 
+# first_dead <- dead_trees %>% 
+#   group_by(TreeID) %>% 
+#   summarise(death = min(day))
+# # use first_dead to expand/outwardly "gapfill" the dead_trees df so that 
+# # life = 0 for that tree on all dates for which there are other measurements
+# 
+# dead_export <- first_dead %>% 
+#   mutate(treatment = case_when(TreeID %in% c("PSME22", "PIPO56")~"water",
+#                                .default = "drought"))
+# 
+# # write_csv(dead_export, "data/Experiment/Processed/Death_Day_Fl-Based.csv")
+# 
+# alive_trees <- (filter(fl, Fv_Fm_dark >= 0.1)) %>% 
+#   group_by(TreeID) %>%
+#   unique() %>% 
+#   mutate(life = 1) %>% 
+#   dplyr::select(TreeID, spp, date, life, temp, water, day) %>% 
+#   group_by(TreeID)
+# 
+# tree_fl <- rbind(dead_trees, alive_trees) %>% 
+#   mutate(time = yday(date)-202)
+# 
+# ggplot(tree_fl, aes(x = day, y = life))+
+#   geom_point(aes(color = water))+
+#   facet_wrap(~spp)
 
+# i think i should be fitting separate models for each species
+# because i dont want to use information from one species to inform my model
+# for a different one.
 
-
-dead_trees <- (filter(fl, Fv_Fm_dark < 0.1)) %>% 
-  group_by(TreeID) %>%
-  unique() %>% 
-  mutate(life = 0) %>% 
-  dplyr::select(TreeID, spp, date, life, temp, water, day) %>% 
-  group_by(TreeID)
-
-
-first_dead <- dead_trees %>% 
-  group_by(TreeID) %>% 
-  summarise(death = min(day))
-# use first_dead to expand/outwardly "gapfill" the dead_trees df so that 
-# life = 0 for that tree on all dates for which there are other measurements
-
-dead_export <- first_dead %>% 
-  mutate(treatment = case_when(TreeID %in% c("PSME22", "PIPO56")~"water",
-                               .default = "drought"))
-
-# write_csv(dead_export, "data/Experiment/Processed/Death_Day_Fl-Based.csv")
-
-alive_trees <- (filter(fl, Fv_Fm_dark >= 0.1)) %>% 
-  group_by(TreeID) %>%
-  unique() %>% 
-  mutate(life = 1) %>% 
-  dplyr::select(TreeID, spp, date, life, temp, water, day) %>% 
-  group_by(TreeID)
-
-tree_fl <- rbind(dead_trees, alive_trees) %>% 
-  mutate(time = yday(date)-202)
-
-ggplot(tree_fl, aes(x = day, y = life))+
-  geom_point(aes(color = water))+
-  facet_wrap(~spp)
-
-mort_glm <- glm(life ~ day*spp + temp*spp + day*temp, data = trees_dates, family = binomial)
-summary(mort_glm)
+# mort_glm <- glm(life ~ day*spp + temp*spp + day*temp, data = trees_dates, family = binomial)
+# summary(mort_glm)
 
 expit <- function(x){
   exp(x)/(1+exp(x))
 }
+
+add_predictions <- function(df){
+  
+  model <- glm(life ~ day*temp, data = df, family = binomial)
+    
+  pred <- predict(model, type = "link", se.fit = T)
+  lower <- expit(pred$fit + qnorm(0.025)*pred$se.fit)
+  upper <- expit(pred$fit + qnorm(0.975)*pred$se.fit)
+  
+  df$pred <- expit(pred$fit)
+  df$ci_lo <- lower
+  df$ci_hi <- upper
+  
+  return(df)
+}
+
+pipo_new <- add_predictions(df = filter(trees_dates, spp == "PIPO"))
+psme_new <- add_predictions(df = filter(trees_dates, spp == "PSME"))
+pifl_new <- add_predictions(df = filter(trees_dates, spp == "PIFL"))
+pien_new <- add_predictions(df = filter(trees_dates, spp == "PIEN"))
+
+new_data <- rbind(pipo_new, psme_new, pifl_new, pien_new)
+new_data$spp <- factor(new_data$spp, levels = c("PSME", "PIPO", "PIEN", "PIFL"))
+new_data$group <- case_when(new_data$spp %in% c("PIPO", "PSME") ~ "low-elevation",
+                            .default = "high-elevation")
 
 pred <- predict(mort_glm, type = "link", se.fit = T)
 lower <- expit(pred$fit + qnorm(0.025)*pred$se.fit)
@@ -132,6 +156,54 @@ stress_means <- stress_days %>%
   summarise(mean_lim = mean(cpt), med_lim = median(cpt))
 stress_means$spp <- factor(stress_means$spp, levels = c("PSME", "PIPO", "PIEN", "PIFL"))
 
+
+ggplot(new_data, aes(x = day, y = life*100))+
+  # geom_point(aes(color = temp, shape = temp), alpha = 0.3)+
+  # scale_shape_manual(values = c(21,2))+
+  geom_hline(yintercept = 50, color = "gray50", linetype=4)+
+  geom_line(aes(color = temp, linetype = temp,
+                group = interaction(temp, water),
+                x = day, y = 100*pred))+
+  scale_color_manual(values=c("blue", "red"))+
+  scale_fill_manual(values=c("blue", "red"))+
+  geom_ribbon(alpha = 0.2, aes(fill = temp, linetype = temp,
+                               group = interaction(temp, water),
+                               x = day, ymin = ci_lo*100, ymax = ci_hi*100))+
+  # geom_vline(data = stress_means, aes(xintercept = mean_lim,
+  #                                     color = temp))+
+  facet_wrap(~spp, ncol = 1)+
+  theme_minimal(base_size = 15)+
+  labs(x = "Days of drought", y = "% survival")
+
+ggplot(new_data, aes(x = day, y = life*100))+
+  # geom_point(aes(color = temp, shape = temp), alpha = 0.3)+
+  # scale_shape_manual(values = c(21,2))+
+  geom_hline(yintercept = 50, color = "gray50", linetype=4)+
+  geom_line(aes(color = temp, linetype = spp,
+                group = interaction(temp, water, spp),
+                x = day, y = 100*pred))+
+  scale_color_manual(values=c("blue", "red"))+
+  scale_fill_manual(values=c("blue", "red"))+
+  geom_ribbon(alpha = 0.2, aes(fill = temp, linetype = temp,
+                               group = interaction(temp, water, spp),
+                               x = day, ymin = ci_lo*100, ymax = ci_hi*100))+
+  # geom_vline(data = stress_means, aes(xintercept = mean_lim,
+  #                                     color = temp))+
+  facet_wrap(~group, ncol = 1)+
+  theme_minimal(base_size = 15)+
+  labs(x = "Days of drought", y = "% survival")
+
+get_LD50 = function(fit){
+  data.frame(
+    LD50 = dose.p(fit)[1],
+    CI = attributes(dose.p(fit))$SE[,1]*qnorm(0.975)
+  )
+}
+
+get_LD50(model <- glm(life ~ day*temp, data = filter(trees_dates, spp == "PIPO"), family = binomial))
+get_LD50(model <- glm(life ~ day*temp, data = filter(trees_dates, spp == "PSME"), family = binomial))
+get_LD50(model <- glm(life ~ day*temp, data = filter(trees_dates, spp == "PIEN"), family = binomial))
+get_LD50(model <- glm(life ~ day*temp, data = filter(trees_dates, spp == "PIFL"), family = binomial))
 
 ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
   # geom_point(aes(color = temp, shape = temp), alpha = 0.3)+
@@ -181,12 +253,6 @@ ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
 
 # ED(drm(mort_glm))
 
-get_LD50 = function(fit){
-  data.frame(
-    LD50 = dose.p(fit)[1],
-    CI = attributes(dose.p(fit))$SE[,1]*qnorm(0.975)
-  )
-}
 
 ld50s <- trees_dates %>% 
   filter(water == "drought") %>% 

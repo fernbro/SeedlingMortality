@@ -2,7 +2,6 @@ library(tidyverse)
 options(digits = 10)
 library(RcppRoll)
 # install.packages("climatrends")
-library(climatrends)
 
 # DAILY data acquired from PRISM explorer (https://prism.oregonstate.edu/explorer/) on Thursday, June 19th, 2025
 # see acquisition parameters in original CSVs
@@ -51,15 +50,16 @@ names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax", "ppt"
 prov_clim <- prov_clim %>% 
   mutate(vpdmax = vpdmax/10, vpdmin = vpdmin/10) %>% 
   mutate(vpd = (vpdmax+vpdmin)/2)
+
+# write_csv(prov_clim, "data/Provenance/Daily_Provenance_Climate.csv")
 # prov_clim <- prov_clim %>% 
 #   mutate(tmean = as.numeric(tmean))
 
-# how to check for days < 5mm?
 
-rainfall(filter(prov_clim, spp == "PIPO")$ppt)
-rainfall(filter(prov_clim, spp == "PSME")$ppt)
-rainfall(filter(prov_clim, spp == "PIEN")$ppt)
-rainfall(filter(prov_clim, spp == "PIFL")$ppt)
+
+
+
+
 
 # lets get the day of peak VPD and day of first (daily) PPT >= 1
 
@@ -146,78 +146,6 @@ ggplot(start_vs_peak, aes(x = year, y = diff))+
   facet_wrap(~spp, scales = "free")+
   theme_minimal(base_size = 20)+
   labs(x = "Year", y = "Days post-peak VPD before monsoon onset")
-  
-
-  # filter(ppt >= 0.5)
-
-      # defining rainy season onset?
-      # from 10.1002/joc.6264:
-      # The MR14 method defines onset as: (a) the first wet day
-      # (≥ 1 mm) of (b) the first 5-day period with average rainfall
-      # equal or larger than the climatological 5-day wet spell for
-      # April–October and (c) without a 10-day dry spell with precipitation 
-      # below 5 mm during the following 30 days.
-      
-      # This definition includes five parameters: the
-      # amount of rainfall of the first and last wet spell, its duration,
-      # the duration and intensity of the post-onset and pre-demise
-      # dry spells, and the length of the period for which these dry
-      # spells are searched
-      
-      # steps:
-      # identify 5-day periods where the running cumulative sum of precipitation 
-      # is greater than or equal to the mean 5-day accumulation from april-october
-      # select the first day of the earliest 5-day period, then make sure there are 
-      # no 10 consecutive days where ppt doesn't sum to at least 5mm within the next 30 days.
-      # iterate thru the qualifying 5-day periods until you have the earliest one with no subsequent dry spells
-      
-# years <- unique(prov_clim$year)
-# spp <- unique(prov_clim$spp)
-# days <- seq(1, 366, by = 1)
-# 
-# # compute "wet spell" climatologies
-# wet_sums <- prov_clim %>% 
-#   filter(month >= 4 & month <= 10) %>% 
-#   dplyr::select(spp, doy, ppt, year) %>% 
-#   group_by(spp, year) %>% 
-#   arrange(doy) %>% 
-#   mutate(ppt_5day = roll_sum(ppt, n = 5, align = "right", fill = NA)) %>% 
-#   filter(!is.na(ppt_5day)) %>% 
-#   ungroup()
-# 
-# climatologies <- wet_sums %>% 
-#   group_by(spp) %>% 
-#   summarise(wet_avg = mean(ppt_5day))
-# 
-# for(j in 1:length(spp)){
-#   for(i in 1:length(years)){
-#   
-#   prov_sub <- filter(prov_clim, 
-#                      year == years[i] & spp == spp[j]) %>% 
-#     filter(month >= 4 & month <= 10) %>% 
-#     dplyr::select(spp, doy, ppt) %>% 
-#     arrange(doy) %>% 
-#     mutate(ppt_5day = roll_sum(ppt, n = 5, align = "right", fill = NA), # preceding 5 days (incl. day-of)
-#            ppt_10day = roll_sum(ppt, n = 10, align = "left", fill = NA)) # succeeding 10 days (incl. day-of)
-#   
-#   # provide T or F for if days have the 5-day wet period threshold
-#   # provide T or F for if 10-day sums are at least 5mm
-#   qual_period <- prov_sub %>% 
-#     mutate(wet_pd = case_when(ppt_5day >= filter(climatologies, spp == spp[j])$wet_avg ~ T,
-#                               ppt_5day < filter(climatologies, spp == spp[j])$wet_avg ~ F,),
-#            at_least_5 = case_when(ppt_10day >= 5 ~ 1,
-#                                   ppt_10day < 5 ~ 0))
-#   
-#   # select days where the 5-day wet period is met and there are no falses in the following 30 days
-#   quals <- qual_period %>% 
-#     arrange(doy) %>% 
-#     mutate(wet_score = roll_sum(at_least_5, n = 10, align = "left", fill = NA, na.rm = T))
-#   
-#   }
-# }
-
-#rollapply(.$at_least_5, width = 10, FUN = isTRUE, align = "left", fill = NA)
-
 
 # first day where ppt > 5 mm:
 prov_jjas_ppt <- prov_clim %>% 

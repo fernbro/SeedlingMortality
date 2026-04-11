@@ -9,16 +9,6 @@ hw_colors <- c("blue", "red")
 morph <- read_csv("data/Experiment/Processed/Weight_Diam_Color.csv") %>% 
   mutate(date = date(date))
 
-# examp <- stress_df %>% 
-#   filter(TreeID == "PIEN4") %>% 
-#   dplyr::select(weight)
-# 
-# x <- cpt.mean(examp$weight, method = "AMOC", class = F)[[1]] 
-
-# this just looks at changes in the MEAN WEIGHT, *not the rate of change*
-# could simply differentiate and it might be ok?
-# or also look into cpop R package: "Detection of Multiple Changes in Slope in Univariate Time-Series
-
 stress_df <- morph %>% 
   filter(water == "drought")
 
@@ -52,11 +42,16 @@ for(i in 1:length(ind)){
   stress_day_1 <- data.frame(TreeID = ID,
                              cpt = cpt.mean(predict_d1, 
                                             method = "AMOC", 
-                                            class = F)[[1]])
+                                            class = F)[[1]], # index 1 = changepoint x (time)
+                             conf = cpt.mean(predict_d1, # soil water limited ET rate
+                                                 method = "AMOC", 
+                                                 class = F)) # index 2 = confidence
   
   stress_day <- rbind(stress_day, stress_day_1)
 }
 
+# quickly comparing cpt[[1]] and cpt[[2]], they are negatively correlated
+# i.e., if they reached soil lim later, they dried out slower afterwards
 
 stress_days <- stress_day %>% 
   inner_join(unique(dplyr::select(morph, TreeID, spp, id, temp, water)))

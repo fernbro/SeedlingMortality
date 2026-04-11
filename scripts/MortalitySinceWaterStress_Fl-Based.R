@@ -79,9 +79,34 @@ ggplot(trees_dates, aes(x = days_stressed, y = life))+
   geom_line(aes(group = TreeID))+
   facet_wrap(~spp)
 
-mort_glm <- glm(life ~ days_stressed*spp + temp*spp + days_stressed*temp, data = trees_dates, family = binomial)
+mort_glm <- glm(life ~ days_stressed*spp + 
+                  temp*spp + days_stressed*temp -1, 
+                data = trees_dates, family = binomial)
 summary(mort_glm)
 
+# individual spp GLMs with no temp effect: (for LD50s)
+              mort_pifl <- glm(life ~ days_stressed,
+                               data = filter(trees_dates, spp == "PIFL"),
+                               family = binomial)
+              dose.p(mort_pifl, p = 0.5)
+              
+              mort_pien <- glm(life ~ days_stressed,
+                               data = filter(trees_dates, spp == "PIEN"),
+                               family = binomial)
+              dose.p(mort_pien, p = 0.5)
+              
+              mort_pipo <- glm(life ~ days_stressed,
+                               data = filter(trees_dates, spp == "PIPO"),
+                               family = binomial)
+              dose.p(mort_pipo, p = 0.5)
+              
+              mort_psme <- glm(life ~ days_stressed,
+                               data = filter(trees_dates, spp == "PSME"),
+                               family = binomial)
+              dose.p(mort_psme, p = 0.5)
+              
+# fitting and adding to data frames for plotting:
+              
 expit <- function(x){
   exp(x)/(1+exp(x))
 }
@@ -97,6 +122,8 @@ trees_dates$ci_hi <- upper
 trees_dates$spp <- factor(trees_dates$spp, levels = c("PSME", "PIPO", "PIEN", "PIFL"))
 
 
+
+
 ggplot(trees_dates, aes(x = days_stressed, y = life*100))+
   # geom_point(aes(color = temp, shape = temp), alpha = 0.3)+
   # scale_shape_manual(values = c(21,2))+
@@ -110,6 +137,9 @@ ggplot(trees_dates, aes(x = days_stressed, y = life*100))+
   facet_wrap(~spp, ncol = 1)+
   theme_minimal(base_size = 15)+
   labs(x = "Days of water stress", y = "% survival")
+
+# 
+
 
 ggplot(filter(trees_dates, water == "drought"), aes(x = day, y = life*100))+
   geom_hline(yintercept = 50, color = "gray50", linetype=4)+
@@ -138,9 +168,9 @@ get_LD50 = function(fit){
 }
 
 ld50s <- trees_dates %>% 
-  filter(water == "drought") %>% 
+  # filter(water == "drought") %>% 
   group_by(temp, spp) %>% 
-  do(get_LD50(glm(life ~ day, family = "binomial", data = .))) %>% 
+  do(get_LD50(glm(life ~ days_stressed, family = "binomial", data = .))) %>% 
   mutate(ci_lo = LD50-CI, ci_hi = LD50+CI)
 
 ggplot(ld50s, aes(x = LD50, y = spp, shape = temp, color = temp))+

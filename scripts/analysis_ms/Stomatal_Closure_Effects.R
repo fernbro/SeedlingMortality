@@ -24,9 +24,9 @@ ggplot(stom_stress, aes(x = cpt, y = day_closed))+
   geom_point()+
   facet_wrap(~spp)+
   geom_abline(slope = 1, intercept = 0)+
-  geom_smooth(method = "lm", se = F)+
+  # geom_smooth(method = "lm", se = F)+
   theme_minimal(base_size = 20)+
-  labs(x = "Day of soil water limitation", y = "Day of permanent stomatal closure")
+  labs(x = "Day of soil water limitation", y = "Day of 'permanent' stomatal closure")
 
 ggplot(stom_stress, aes(x = spp, y = day_closed))+
   geom_boxplot(aes(fill = spp))+

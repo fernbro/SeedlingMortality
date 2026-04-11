@@ -38,6 +38,14 @@ names(prov_clim) <- c("date", "tmin", "tmean", "tmax", "vpdmin", "vpdmax",
 prov_clim <- prov_clim %>% 
   mutate(vpdmax = vpdmax/10, vpdmin = vpdmin/10) %>% 
   mutate(vpd = (vpdmax+vpdmin)/2)
+
+# write_csv(prov_clim, "data/Provenance/Daily_Prov_Climate.csv")
+
+
+#compare sources:
+TukeyHSD(aov(tmax ~ spp, filter(prov_clim, month == 6)))
+TukeyHSD(aov(vpd ~ spp, filter(prov_clim, month == 6)))
+
 # prov_clim <- prov_clim %>% 
 #   mutate(tmean = as.numeric(tmean))
 
@@ -106,7 +114,6 @@ ggplot(filter(prov_clim, month == 6))+
 
 
 
-
 ggplot(filter(prov_clim, month == 6))+
   # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+
   geom_point(aes(x = year, y = vpdmax, fill = spp))+
@@ -118,7 +125,7 @@ ggplot(filter(prov_clim, month == 6))+
   geom_boxplot(aes(x = spp, y = vpd, fill = spp))+
   theme_light(base_size = 23)+
   labs(x = "Species",
-       y = "June VPD (kPa), 1984 - 2024", fill = "Species")
+       y = "June mean daily VPD (kPa), 1984 - 2024", fill = "Species")
 
 ggplot(filter(prov_clim, month == 6))+
   # \geom_boxplot(aes(x = spp, y = tmin, fill = spp), alpha = 0.5)+

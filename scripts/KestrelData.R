@@ -17,12 +17,12 @@ renameFunction <- function(x,someNames){
 }
 
 
-kdat <- lapply(kest, read_csv, skip = 3) %>% 
-  lapply(filter, `Data Type` == "point") %>% 
-  lapply(dplyr::select, `FORMATTED DATE_TIME`, `Temperature`, `Relative Humidity`) %>% 
+kdat <- lapply(kest, read_csv, skip = 3) %>%
+  lapply(filter, `Data Type` == "point") %>%
+  lapply(dplyr::select, `FORMATTED DATE_TIME`, `Temperature`, `Relative Humidity`) %>%
   lapply(renameFunction) %>%
   lapply(mutate, year = year(datetime), datetime = ymd_hms(datetime, tz = "America/Phoenix"),
-         temp = as.numeric(temp), rh = as.numeric(rh)) %>% 
+         temp = as.numeric(temp), rh = as.numeric(rh)) %>%
   lapply(filter, year >= 2025) %>%
   lapply(dplyr::select, -year)
 
@@ -60,25 +60,25 @@ kest_4L$chamber <- 4
 kest_4R$chamber <- 4
 
 chamber_data <- rbind(kest_1L, kest_1R, kest_2L, kest_2R,
-                      kest_3L, kest_3R, kest_4L, kest_4R) %>% 
+                      kest_3L, kest_3R, kest_4L, kest_4R) %>%
   mutate(set = case_when(kest %in% c("1L", "1R", "2L", "2R") ~ "low elevation",
                          .default = "high elevation"),
-         chamber = factor(chamber)) %>% 
-  mutate(vpd = calc_vpd(temp, rh)) %>% 
-  filter(datetime >= as.POSIXct("2025-07-16")) %>% 
+         chamber = factor(chamber)) %>%
+  mutate(vpd = calc_vpd(temp, rh)) %>%
+  filter(datetime >= as.POSIXct("2025-07-16")) %>%
   mutate(day = case_when(year(datetime) == 2025 ~ yday(datetime)-202,
                          year(datetime) == 2026 ~ 365 - 202 + yday(datetime)))
 
-chamber_pre <- chamber_data %>% 
-  filter(day < 0) %>% 
-  group_by(chamber) %>% 
+chamber_pre <- chamber_data %>%
+  filter(day < 0) %>%
+  group_by(chamber) %>%
   summarise(tmean = mean(temp))
 
 
-# chamber_wide <- chamber_data %>% 
+# chamber_wide <- chamber_data %>%
 #   pivot_wider(names_from = chamber,
-#               values_from = temp:rh) %>% 
-#   filter(!is.na(temp_4L), doy >= 197) %>% 
+#               values_from = temp:rh) %>%
+#   filter(!is.na(temp_4L), doy >= 197) %>%
 #   mutate(temp_diff = temp_4L - temp_1L)
 
 # ggplot(chamber_wide, aes(x = datetime, y = temp_diff))+
@@ -88,28 +88,28 @@ chamber_pre <- chamber_data %>%
 
 
 #1L and 1R were in fahrenheit
-# chamber_data <- mutate(chamber_data, 
+# chamber_data <- mutate(chamber_data,
 #                        temp = case_when(
 #                          chamber %in% c("1L", "1R") ~ (temp-32)*(5/9),
-#                          .default = temp)) %>% 
+#                          .default = temp)) %>%
 #   mutate(doy = yday(datetime))
 
 # calculate some daily avgs
 
-daily_avgs <- chamber_data %>% 
-  group_by(kest, chamber, set, day) %>% 
-  summarise(temp = mean(temp, na.rm = T), 
+daily_avgs <- chamber_data %>%
+  group_by(kest, chamber, set, day) %>%
+  summarise(temp = mean(temp, na.rm = T),
             rh = mean(rh, na.rm = T),
             vpd_m = mean(vpd, na.rm = T),
             vpd_max = max(vpd),
             vpd_min = min(vpd))
 
-daily_ch <- chamber_data %>% 
-  group_by(chamber, set, day) %>% 
-  summarise(temp = mean(temp, na.rm = T), 
+daily_ch <- chamber_data %>%
+  group_by(chamber, set, day) %>%
+  summarise(temp = mean(temp, na.rm = T),
             rh = mean(rh, na.rm = T),
             vpd = mean(vpd, na.rm = T))
-  
+
 # write_csv(daily_ch, "data/Experiment/Processed/Kestrel_Dailys_ChamberAvg.csv")
 # write_csv(daily_avgs, "data/Experiment/Processed/Kestrel_Dailys.csv")
 
